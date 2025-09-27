@@ -51,6 +51,50 @@ AudioManager.load('shell-splash', 'assets/shell-splash.mp3', { volume: 1.0 });
 AudioManager.load('logo-sparkle', 'assets/logo-sparkle.mp3', { volume: 0.9 });
 // background audio element (home only) will be referenced later if present
 
+// Helper to play a splash clip and resolve with effective clip length (ms)
+function playClippedAudio(id, clipSubtractMs = 2000, minClipMs = 300, fadeMs = 200) {
+  return new Promise((resolve) => {
+    const a = AudioManager.cache.get(id);
+    if (!a) {
+      try { AudioManager.play(id, { restart:true }); } catch(e){}
+      return setTimeout(resolve, minClipMs + 100);
+    }
+    const schedulePlay = () => {
+      const dur = (a.duration && !isNaN(a.duration) && a.duration > 0) ? Math.round(a.duration * 1000) : null;
+      let clipMs = dur ? Math.max(minClipMs, dur - clipSubtractMs) : Math.max(minClipMs, 600);
+      if (clipMs < minClipMs) clipMs = minClipMs;
+      const fadeLength = Math.min(fadeMs, Math.floor(clipMs / 2));
+      try { a.currentTime = 0; } catch(e){}
+      try { a.volume = (typeof a._origVolume === 'number') ? a._origVolume : a.volume; } catch(e){}
+      const p = a.play(); if (p && p.then) p.catch(()=>{});
+      const fadeStart = Math.max(0, clipMs - fadeLength);
+      const fadeStep = 50; let fadeTimer = null;
+      const doPause = () => { try { if (fadeTimer) clearInterval(fadeTimer); }catch(e){}; try { a.pause(); a.currentTime = 0; }catch(e){}; try { if (typeof a._origVolume === 'number') a.volume = a._origVolume; }catch(e){}; resolve(clipMs); };
+      setTimeout(() => {
+        try {
+          if (typeof a._origVolume !== 'number') a._origVolume = a.volume;
+          const startVol = a.volume;
+          const steps = Math.max(1, Math.ceil(fadeLength / fadeStep));
+          let step = 0;
+          fadeTimer = setInterval(() => {
+            step++;
+            const t = step / steps;
+            try { a.volume = Math.max(0, startVol * (1 - t)); } catch(e){}
+            if (step >= steps) { clearInterval(fadeTimer); doPause(); }
+          }, fadeStep);
+        } catch (e) { doPause(); }
+      }, fadeStart);
+      setTimeout(() => { try { resolve(clipMs); } catch(e){} }, clipMs + 500);
+    };
+    if (a.readyState >= 1 && a.duration && !isNaN(a.duration)) schedulePlay();
+    else {
+      const onMeta = () => { try { a.removeEventListener('loadedmetadata', onMeta); } catch(e){}; schedulePlay(); };
+      try { a.addEventListener('loadedmetadata', onMeta); } catch(e){ schedulePlay(); }
+      setTimeout(() => { try { schedulePlay(); } catch(e){} }, 800);
+    }
+  });
+}
+
 // Helper: wait for specified short SFX to finish or until a max timeout (ms)
 function waitForSfx(ids = ['shell-splash','logo-sparkle'], maxWait = 1500) {
   try {
@@ -292,187 +336,59 @@ if (navToggle && nav) {
   });
 }
 
-// Shell throw animation: when a shell button is clicked, clone it, animate it up, then navigate/scroll
-document.querySelectorAll('.shell-btn').forEach(btn => {
-  btn.addEventListener('click', (e) => {
-    const href = btn.getAttribute('data-href');
-    const targetSelector = btn.getAttribute('data-target');
-    const target = targetSelector ? document.querySelector(targetSelector) : null;
+// Shell handlers: attach/detach so we can reinitialize after PJAX
+function attachShellHandlers(root = document) {
+  const buttons = Array.from(root.querySelectorAll('.shell-btn'));
+  buttons.forEach(btn => {
+    // avoid double-attaching
+    if (btn.dataset.__shellAttached) return;
+    btn.dataset.__shellAttached = '1';
+    btn.addEventListener('click', async (e) => {
+      e.preventDefault();
+      const href = btn.getAttribute('data-href');
+      const targetSelector = btn.getAttribute('data-target');
+      const target = targetSelector ? document.querySelector(targetSelector) : null;
+      const rect = btn.getBoundingClientRect();
+      const clone = btn.cloneNode(true);
+      btn.classList.add('shell-hidden');
+      btn.style.pointerEvents = 'none';
+      const cs = getComputedStyle(btn);
+      let baseW = Math.round(parseFloat(cs.width) || btn.offsetWidth);
+      let baseH = Math.round(parseFloat(cs.height) || btn.offsetHeight);
+      const centerX = rect.left + rect.width / 2;
+      const centerY = rect.top + rect.height / 2;
+      const left = Math.round(centerX - baseW / 2);
+      const top = Math.round(centerY - baseH / 2);
+      clone.style.transform = 'none'; clone.style.position = 'fixed'; clone.style.left = left + 'px'; clone.style.top = top + 'px';
+      clone.style.width = baseW + 'px'; clone.style.height = baseH + 'px'; clone.style.boxSizing = cs.boxSizing || 'border-box';
+      try { clone.querySelectorAll && clone.querySelectorAll('*').forEach(n => { n.style && (n.style.transform = 'none'); }); } catch (e) {}
+      clone.style.margin = '0'; clone.style.zIndex = 9999; clone.style.pointerEvents = 'none'; document.body.appendChild(clone);
 
-    // create clone and absolute-position it
-    // Prepare clone so it visually matches the original in position but uses untransformed (base) dimensions
-    const rect = btn.getBoundingClientRect();
-    const clone = btn.cloneNode(true);
-    // fade original while clone animates to avoid duplicate visuals
-    btn.classList.add('shell-hidden');
-    btn.style.pointerEvents = 'none';
+      let THROW_ANIM_MS = 600;
+      clone.style.transition = `transform ${THROW_ANIM_MS}ms cubic-bezier(.2,.8,.2,1), left ${THROW_ANIM_MS}ms, top ${THROW_ANIM_MS}ms, opacity .6s`;
+      let clipMsPromise = Promise.resolve(600);
+      try { clipMsPromise = playClippedAudio('shell-splash', 2000, 300, 200); } catch(e){ try{ AudioManager.play('shell-splash',{restart:true}); }catch(e){} }
+      try { const a = AudioManager.cache.get('shell-splash'); const durMs = (a && a.duration && !isNaN(a.duration)) ? Math.round(a.duration*1000) : null; const estClip = durMs ? Math.max(300, durMs - 2000) : 600; const margin = 80; THROW_ANIM_MS = Math.max(200, estClip - margin); clone.style.transition = `transform ${THROW_ANIM_MS}ms cubic-bezier(.2,.8,.2,1), left ${THROW_ANIM_MS}ms, top ${THROW_ANIM_MS}ms, opacity .6s`; } catch(e) { THROW_ANIM_MS = 600; }
 
-  // Prefer computed style width/height which reflect layout size (ignores CSS transforms)
-  const cs = getComputedStyle(btn);
-  let baseW = parseFloat(cs.width) || btn.offsetWidth;
-  let baseH = parseFloat(cs.height) || btn.offsetHeight;
-  // Ensure integers
-  baseW = Math.round(baseW);
-  baseH = Math.round(baseH);
-    // Position clone so its center aligns with the original's visual center
-    const centerX = rect.left + rect.width / 2;
-    const centerY = rect.top + rect.height / 2;
-    const left = Math.round(centerX - baseW / 2);
-    const top = Math.round(centerY - baseH / 2);
+      requestAnimationFrame(() => { clone.classList.add('throwing'); clone.style.left = '50%'; clone.style.top = '8%'; clone.style.transform = 'translate(-50%,-10%)'; clone.style.opacity = '1'; });
 
-    clone.style.transform = 'none';
-    clone.style.position = 'fixed';
-    clone.style.left = left + 'px';
-    clone.style.top = top + 'px';
-    clone.style.width = baseW + 'px';
-    clone.style.height = baseH + 'px';
-    // ensure the clone doesn't accidentally inherit transformed children styles
-    clone.style.boxSizing = cs.boxSizing || 'border-box';
-    // reset transforms on inner elements that might have inline styles copied from the original
-    try {
-      clone.querySelectorAll && clone.querySelectorAll('*').forEach(n => { n.style && (n.style.transform = 'none'); });
-    } catch (e) {}
-    clone.style.margin = '0';
-  // We'll compute a throw animation duration that matches a clipped splash audio length.
-  // Helper to play the splash but clip it so it ends ~clipSubtractMs earlier (with a small fade)
-  function playClippedAudio(id, clipSubtractMs = 2000, minClipMs = 300, fadeMs = 200) {
-    return new Promise((resolve) => {
-      const a = AudioManager.cache.get(id);
-      if (!a) {
-        // fallback to simple play
-        try { AudioManager.play(id, { restart:true }); } catch(e){}
-        // resolve after a short default
-        return setTimeout(resolve, minClipMs + 100);
-      }
-
-      // when metadata isn't available, use a reasonable default clip length
-      const schedulePlay = () => {
-        const dur = (a.duration && !isNaN(a.duration) && a.duration > 0) ? Math.round(a.duration * 1000) : null;
-        let clipMs = dur ? Math.max(minClipMs, dur - clipSubtractMs) : Math.max(minClipMs, 600);
-        if (clipMs < minClipMs) clipMs = minClipMs;
-        // ensure fade doesn't exceed clip length
-        const fadeLength = Math.min(fadeMs, Math.floor(clipMs / 2));
-
-        try {
-          a.currentTime = 0;
-        } catch (e) {}
-        try { a.volume = (typeof a._origVolume === 'number') ? a._origVolume : a.volume; } catch(e){}
-        const p = a.play();
-        if (p && p.then) p.catch(()=>{});
-
-        // schedule fade start and pause
-        const fadeStart = Math.max(0, clipMs - fadeLength);
-        const fadeStep = 50; // ms interval
-        let fadeTimer = null;
-
-        const doPause = () => {
-          try { if (fadeTimer) clearInterval(fadeTimer); } catch(e){}
-          try { a.pause(); a.currentTime = 0; } catch(e){}
-          // restore original volume
-          try { if (typeof a._origVolume === 'number') a.volume = a._origVolume; } catch(e){}
-          resolve(clipMs);
-        };
-
-        // start fade shortly before clip end
-        setTimeout(() => {
-          try {
-            // store original volume
-            if (typeof a._origVolume !== 'number') a._origVolume = a.volume;
-            const startVol = a.volume;
-            const steps = Math.max(1, Math.ceil(fadeLength / fadeStep));
-            let step = 0;
-            fadeTimer = setInterval(() => {
-              step++;
-              const t = step / steps;
-              try { a.volume = Math.max(0, startVol * (1 - t)); } catch(e){}
-              if (step >= steps) {
-                clearInterval(fadeTimer);
-                doPause();
-              }
-            }, fadeStep);
-          } catch (e) { doPause(); }
-        }, fadeStart);
-
-        // Safety: ensure we resolve after clipMs + 300ms in case fade/pause failed
-        setTimeout(() => { try { resolve(clipMs); } catch(e){} }, clipMs + 500);
-      };
-
-      if (a.readyState >= 1 && a.duration && !isNaN(a.duration)) schedulePlay();
-      else {
-        // wait for metadata then schedule
-        const onMeta = () => { try { a.removeEventListener('loadedmetadata', onMeta); } catch(e){}; schedulePlay(); };
-        try { a.addEventListener('loadedmetadata', onMeta); } catch(e){ schedulePlay(); }
-        // as a fallback in case loadedmetadata never fires
-        setTimeout(() => { try { schedulePlay(); } catch(e){} }, 800);
-      }
-    });
-  }
-
-  // Determine throw animation duration based on clipped audio length (will be set later when we know clip length)
-  let THROW_ANIM_MS = 600; // temporary default - updated once clip duration is known
-  clone.style.transition = `transform ${THROW_ANIM_MS}ms cubic-bezier(.2,.8,.2,1), left ${THROW_ANIM_MS}ms, top ${THROW_ANIM_MS}ms, opacity .6s`;
-    clone.style.zIndex = 9999;
-    clone.style.pointerEvents = 'none';
-    document.body.appendChild(clone);
-
-  // Play a clipped version of the splash and use its effective clip duration to drive the throw timing
-  let clipMsPromise = Promise.resolve(600);
-  try {
-    // start clipped playback immediately (the helper starts playback) and return a promise for clip length
-    clipMsPromise = playClippedAudio('shell-splash', 2000, 300, 200);
-  } catch(e) { try { AudioManager.play('shell-splash', { restart:true }); } catch(e){} }
-
-  // Estimate clip length now so we can start the animation immediately (2s earlier behavior)
-  try {
-    const a = AudioManager.cache.get('shell-splash');
-    const durMs = (a && a.duration && !isNaN(a.duration)) ? Math.round(a.duration * 1000) : null;
-    const estClip = durMs ? Math.max(300, durMs - 2000) : 600;
-    const margin = 80;
-    THROW_ANIM_MS = Math.max(200, estClip - margin);
-    clone.style.transition = `transform ${THROW_ANIM_MS}ms cubic-bezier(.2,.8,.2,1), left ${THROW_ANIM_MS}ms, top ${THROW_ANIM_MS}ms, opacity .6s`;
-  } catch(e) {
-    THROW_ANIM_MS = 600;
-    clone.style.transition = `transform ${THROW_ANIM_MS}ms cubic-bezier(.2,.8,.2,1), left ${THROW_ANIM_MS}ms, top ${THROW_ANIM_MS}ms, opacity .6s`;
-  }
-
-  // Start animation immediately (2s earlier than waiting for clip metadata)
-  requestAnimationFrame(() => {
-    clone.classList.add('throwing');
-    clone.style.left = '50%';
-    clone.style.top = '8%';
-    clone.style.transform = 'translate(-50%,-10%)';
-    clone.style.opacity = '1';
+      setTimeout(async () => {
+        try { clone.style.opacity = '0'; await new Promise(r => setTimeout(r,400)); try { clone.remove(); } catch(e) {};
+          // keep original hidden until audio finishes
+          if (href) { await waitForSfx(['shell-splash'], 5000); try { btn.classList.remove('shell-hidden'); btn.style.pointerEvents = ''; } catch(e) {}
+            try { const linkUrl = new URL(href, window.location.href); if (linkUrl.origin === window.location.origin) pjaxNavigate(linkUrl.href); else window.location.href = href; } catch(e) { window.location.href = href; } }
+          else if (target) { await waitForSfx(['shell-splash'], 5000); try { btn.classList.remove('shell-hidden'); btn.style.pointerEvents = ''; } catch(e) {} target.scrollIntoView({behavior:'smooth', block:'start'}); }
+        } catch(e) { console.error(e); }
+      }, THROW_ANIM_MS);
+      clipMsPromise.catch(()=>{});
+    }, { passive:false });
+    // hover sound
+    btn.addEventListener('pointerenter', () => { try { AudioManager.play('shell-hover', { restart:true }); } catch(e){} }, { passive:true });
   });
+}
 
-  // After animation completes, clean up clone and then navigate/scroll (allow SFX a short window to finish)
-  setTimeout(async () => {
-    try {
-      // fade out clone
-      clone.style.opacity = '0';
-      await new Promise(r => setTimeout(r, 400));
-      try { clone.remove(); } catch(e) {}
-
-      // restore original button visibility and pointer events
-      try { btn.classList.remove('shell-hidden'); btn.style.pointerEvents = ''; } catch(e) {}
-
-      if (href) {
-        // Wait up to 2s for splash SFX to finish (or proceed sooner)
-        await waitForSfx(['shell-splash'], 2000);
-        try {
-          const linkUrl = new URL(href, window.location.href);
-          if (linkUrl.origin === window.location.origin) pjaxNavigate(linkUrl.href);
-          else window.location.href = href;
-        } catch(e) { window.location.href = href; }
-      } else if (target) {
-        target.scrollIntoView({behavior:'smooth', block:'start'});
-      }
-    } catch (e) { console.error(e); }
-  }, THROW_ANIM_MS);
-
-  // avoid unhandled rejections
-  clipMsPromise.catch(()=>{});
-  });
-});
+// Initialize shell handlers on load
+attachShellHandlers(document);
 
 // Play shell-hover sound on pointerenter (non-looping)
 document.querySelectorAll('.shell-btn').forEach(btn => {
@@ -676,141 +592,36 @@ window.addEventListener('popstate', (ev) => {
 })();
 
 /* Footprint canvas: spawn footprint shapes following the cursor and expire after 3s */
-(function(){
+// Footprint controller so we can stop/start on PJAX navigation
+function initFootprints() {
   const canvas = document.getElementById('footprint-canvas');
-  if (!canvas) return;
+  if (!canvas) return { start:()=>{}, stop:()=>{} };
   const ctx = canvas.getContext('2d');
   let dpr = window.devicePixelRatio || 1;
   let w = 0, h = 0;
-  const footprints = []; // {x,y,angle,mirror,ts}
-  const baseMinStride = 96; // base px between footprints (desktop). Will be scaled by --footprint-scale
+  const footprints = [];
+  const baseMinStride = 96;
   let lastX = -9999, lastY = -9999, mirror = 0;
+  let raf = null;
+  function resize(){ dpr = window.devicePixelRatio || 1; w = window.innerWidth; h = window.innerHeight; canvas.width = Math.round(w * dpr); canvas.height = Math.round(h * dpr); canvas.style.width = w + 'px'; canvas.style.height = h + 'px'; ctx.setTransform(dpr,0,0,dpr,0,0); }
+  function addFoot(x,y,angle){ const now = performance.now(); mirror += 1; footprints.push({x,y,angle,mirror,ts:now}); }
+  function onPointerMove(ev){ const wavesEl = document.querySelector('.waves-wrapper'); if (wavesEl) { const wr = wavesEl.getBoundingClientRect(); if (ev.clientY <= wr.bottom) return; } const x = ev.clientX; const y = ev.clientY; const footprintScale = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--footprint-scale')) || 1; const minStride = baseMinStride * footprintScale; const dist = Math.hypot(x - lastX, y - lastY); if (dist > minStride) { const angle = Math.atan2(y - lastY || 0, x - lastX || 0) + Math.PI/2; addFoot(x, y, angle); lastX = x; lastY = y; } }
+  function drawFoot(f, age){ const alpha = Math.max(0, 1 - age/1000); ctx.save(); const footprintScale = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--footprint-scale')) || 1; const gapPx = (parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--footprint-gap')) || 20) * footprintScale; const perpX = Math.cos((f.angle || 0) - Math.PI/2); const perpY = Math.sin((f.angle || 0) - Math.PI/2); const lateral = (f.mirror % 2 === 0) ? -gapPx/2 : gapPx/2; ctx.translate(f.x + perpX * lateral, f.y + perpY * lateral); ctx.rotate(f.angle || 0); const footprintBaseWidth = 235; const footprintSize = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--footprint-size')) || 24; let s = footprintSize / footprintBaseWidth; s = s * footprintScale; ctx.scale(s, s); if (f.mirror % 2 === 0) ctx.scale(-1,1); const footCenterX = 180; const bridgeY = 300; const pts = []; pts.push({x: footCenterX + 10, y: bridgeY - 1.72 * 200}); pts.push({x: footCenterX - 235 / 2.0 + 35, y: bridgeY - 1.7 * 200}); pts.push({x: footCenterX - 235 / 2.0, y: bridgeY - 1.2 * 200}); pts.push({x: footCenterX - 150 / 2.0 + 15, y: bridgeY - 70}); pts.push({x: footCenterX - 160 / 2.0, y: bridgeY + 100}); pts.push({x: footCenterX - 80 / 2.0, y: bridgeY + 185}); pts.push({x: footCenterX + 80 / 2.0, y: bridgeY + 185}); pts.push({x: footCenterX + 160 / 2.0, y: bridgeY + 120}); pts.push({x: footCenterX + 150 / 2.0 + 10, y: bridgeY - 20}); pts.push({x: footCenterX + 235 / 2.0, y: bridgeY - 200}); pts.push({x: footCenterX + 235 / 2.0 - 30, y: bridgeY - 1.45 * 200}); const local = pts.map(p => ({x: p.x - footCenterX, y: p.y - bridgeY})); ctx.fillStyle = `rgba(244,219,180,${0.75 * alpha})`; ctx.strokeStyle = `rgba(0,0,0,${0.06 * alpha})`; ctx.lineWidth = 2; ctx.beginPath(); const last = local[local.length - 1]; ctx.moveTo(last.x, last.y); for (let i = 0; i < local.length; i++){ const p = local[i]; const next = local[(i+1) % local.length]; const cx = (p.x + next.x) / 2; const cy = (p.y + next.y) / 2; ctx.quadraticCurveTo(p.x, p.y, cx, cy); } ctx.closePath(); ctx.fill(); ctx.stroke(); ctx.restore(); }
+  function frame(){ ctx.clearRect(0,0,w,h); const now = performance.now(); for (let i = footprints.length - 1; i >= 0; i--) { const f = footprints[i]; const age = now - f.ts; if (age > 1000) { footprints.splice(i,1); continue; } drawFoot(f, age); } raf = requestAnimationFrame(frame); }
+  function start(){ resize(); window.addEventListener('resize', resize); window.addEventListener('pointermove', onPointerMove, {passive:true}); raf = requestAnimationFrame(frame); }
+  function stop(){ try { window.removeEventListener('resize', resize); window.removeEventListener('pointermove', onPointerMove, {passive:true}); } catch(e){} if (raf) { cancelAnimationFrame(raf); raf = null; } ctx.clearRect(0,0,w,h); footprints.length = 0; }
+  start();
+  return { start, stop };
+}
 
-  function resize(){
-    dpr = window.devicePixelRatio || 1;
-    w = window.innerWidth;
-    h = window.innerHeight;
-    canvas.width = Math.round(w * dpr);
-    canvas.height = Math.round(h * dpr);
-    canvas.style.width = w + 'px';
-    canvas.style.height = h + 'px';
-    ctx.setTransform(dpr,0,0,dpr,0,0);
-  }
-  resize();
-  window.addEventListener('resize', resize);
+// Start footprints now (and allow re-initialization after PJAX)
+let __footprintController = initFootprints();
 
-  function addFoot(x,y,angle){
-    const now = performance.now();
-    mirror += 1;
-    footprints.push({x,y,angle,mirror,ts:now});
-  }
-
-  // throttle pointer events to reasonable frequency
-  let lastAdd = 0;
-  window.addEventListener('pointermove', (ev) => {
-    // do not create footprints when pointer is over the waves area
-    const wavesEl = document.querySelector('.waves-wrapper');
-    if (wavesEl) {
-      const wr = wavesEl.getBoundingClientRect();
-      if (ev.clientY <= wr.bottom) return;
-    }
-
-    const x = ev.clientX;
-    const y = ev.clientY;
-    // compute runtime stride scaled by CSS footprint-scale so spacing follows visual size
-    const footprintScale = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--footprint-scale')) || 1;
-    const minStride = baseMinStride * footprintScale;
-    const dist = Math.hypot(x - lastX, y - lastY);
-    if (dist > minStride) {
-      const angle = Math.atan2(y - lastY || 0, x - lastX || 0) + Math.PI/2;
-      addFoot(x, y, angle);
-      lastX = x; lastY = y;
-      lastAdd = performance.now();
-    }
-  }, {passive:true});
-
-  function drawFoot(f, age){
-  // age: ms since spawn, use to fade: 0..1000
-  const alpha = Math.max(0, 1 - age/1000);
-  ctx.save();
-  // compute lateral offset (perpendicular to direction) so left/right feet separate horizontally
-  const footprintScale = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--footprint-scale')) || 1;
-  const gapPx = (parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--footprint-gap')) || 20) * footprintScale;
-  // perpendicular vector to angle
-  const perpX = Math.cos((f.angle || 0) - Math.PI/2);
-  const perpY = Math.sin((f.angle || 0) - Math.PI/2);
-  // mirror decides which side; apply half-gap in each direction
-  const lateral = (f.mirror % 2 === 0) ? -gapPx/2 : gapPx/2;
-  ctx.translate(f.x + perpX * lateral, f.y + perpY * lateral);
-  ctx.rotate(f.angle || 0);
-  // base footprint reference sizes from the original p5 code
-  const footprintBaseWidth = 235; // ballWidth in reference
-  const footprintSize = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--footprint-size')) || 24;
-  let s = footprintSize / footprintBaseWidth;
-  // apply the runtime footprint scale (desktop=1, tablet=0.5, phone=0.25)
-  s = s * footprintScale;
-  ctx.scale(s, s);
-  // when mirrored we already offset laterally above; keep drawing orientation consistent
-  if (f.mirror % 2 === 0) ctx.scale(-1,1);
-
-    // points from the reference makeFootPrint (kept in same relative coordinates)
-    const footCenterX = 180;
-    const bridgeY = 300;
-    const pts = [];
-    pts.push({x: footCenterX + 10, y: bridgeY - 1.72 * 200});
-    pts.push({x: footCenterX - 235 / 2.0 + 35, y: bridgeY - 1.7 * 200});
-    pts.push({x: footCenterX - 235 / 2.0, y: bridgeY - 1.2 * 200});
-    pts.push({x: footCenterX - 150 / 2.0 + 15, y: bridgeY - 70});
-    pts.push({x: footCenterX - 160 / 2.0, y: bridgeY + 100});
-    pts.push({x: footCenterX - 80 / 2.0, y: bridgeY + 185});
-    pts.push({x: footCenterX + 80 / 2.0, y: bridgeY + 185});
-    pts.push({x: footCenterX + 160 / 2.0, y: bridgeY + 120});
-    pts.push({x: footCenterX + 150 / 2.0 + 10, y: bridgeY - 20});
-    pts.push({x: footCenterX + 235 / 2.0, y: bridgeY - 200});
-    pts.push({x: footCenterX + 235 / 2.0 - 30, y: bridgeY - 1.45 * 200});
-
-    // convert points to local coordinates (center around 0,0)
-    const local = pts.map(p => ({x: p.x - footCenterX, y: p.y - bridgeY}));
-
-    // stroke + fill using sand-like colors and alpha based on age
-      // Make footprints lighter: slightly paler fill and reduced stroke alpha so prints read softer on the sand
-      ctx.fillStyle = `rgba(244,219,180,${0.75 * alpha})`;
-      ctx.strokeStyle = `rgba(0,0,0,${0.06 * alpha})`;
-    ctx.lineWidth = 2;
-
-    // draw smooth closed curve using quadratic interpolation
-    ctx.beginPath();
-    // move to last point to emulate the curveVertex wrap in p5
-    const last = local[local.length - 1];
-    ctx.moveTo(last.x, last.y);
-    for (let i = 0; i < local.length; i++){
-      const p = local[i];
-      const next = local[(i+1) % local.length];
-      const cx = (p.x + next.x) / 2;
-      const cy = (p.y + next.y) / 2;
-      ctx.quadraticCurveTo(p.x, p.y, cx, cy);
-    }
-    ctx.closePath();
-    ctx.fill();
-    ctx.stroke();
-
-    ctx.restore();
-  }
-
-  function frame(){
-    ctx.clearRect(0,0,w,h);
-    const now = performance.now();
-    // draw and keep footprints younger than 1s
-    for (let i = footprints.length - 1; i >= 0; i--) {
-      const f = footprints[i];
-      const age = now - f.ts;
-  if (age > 1000) {
-        footprints.splice(i,1);
-        continue;
-      }
-      drawFoot(f, age);
-    }
-    requestAnimationFrame(frame);
-  }
-  requestAnimationFrame(frame);
-})();
+// Re-initialize dynamic parts when PJAX replaces content
+window.addEventListener('content:replace', (ev) => {
+  // Re-run positioning and shell handlers on the new content
+  positionShellsBetween();
+  attachShellHandlers(document);
+  try { __footprintController && __footprintController.stop(); } catch(e){}
+  __footprintController = initFootprints();
+});
