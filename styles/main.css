@@ -234,7 +234,7 @@ body{
    transform: translateX(calc(-50% + 100px - 20px)) translateY(calc(-18% + 50px)) rotate(12deg);
   }
   /* Extra overall shift: move the whole container another 10px left */
-  .shells.absolute{transform:translateX(calc(-50% - 30px)) translateY(20px);}
+  .shells.absolute{transform:translateX(calc(-50% - 30px));}
 }
 
 /* Extra small screens: reduce gap further to keep shells visually centered with text */
