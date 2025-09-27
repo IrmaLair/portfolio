@@ -248,11 +248,16 @@ window.addEventListener('load', async () => {
   // Splash overlay: show on initial full-load only (not on PJAX nav)
   try {
     if (!sessionStorage.getItem('splashShown')) {
-      // create overlay
-      const splash = document.createElement('div');
-      splash.className = 'splash-overlay';
-      splash.innerHTML = `<div class="splash-inner"><img class="splash-logo" src="assets/Logo.svg" alt="logo"></div>`;
-      document.body.appendChild(splash);
+      // Use the existing server-rendered overlay if present, otherwise create one
+      let splash = document.getElementById('splash-overlay');
+      if (!splash) {
+        splash = document.createElement('div');
+        splash.id = 'splash-overlay';
+        splash.className = 'splash-overlay';
+        splash.innerHTML = `<div class="splash-inner"><img class="splash-logo" src="assets/Logo.svg" alt="logo"></div>`;
+        // insert as first child so it paints before other content
+        try { document.body.insertBefore(splash, document.body.firstChild); } catch(e) { document.body.appendChild(splash); }
+      }
       try { document.documentElement.classList.add('splash-lock-scroll'); } catch(e){}
 
       // Wait for important assets: fonts + visible images
