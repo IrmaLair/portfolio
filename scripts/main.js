@@ -482,6 +482,7 @@ window.addEventListener('popstate', (ev) => {
   function findLogos(){ return Array.from(document.querySelectorAll('.site-logo, .page-logo')); }
 
   function spawnSparklesAt(el, count, duration = 15000){
+    if (!el || !(el.getBoundingClientRect)) return; // guard against missing targets
     const rect = el.getBoundingClientRect();
     const centerX = rect.left + rect.width / 2;
     const centerY = rect.top + rect.height / 2;
@@ -578,7 +579,7 @@ window.addEventListener('popstate', (ev) => {
     if (typeof a === 'number'){
       const count = a;
       const duration = (typeof b === 'number') ? b : 15000;
-      const el = document.querySelector('.site-logo') || logos[0];
+      const el = document.querySelector('.site-logo');
       if (el) spawnSparklesAt(el, count, duration);
       return;
     }
@@ -586,10 +587,11 @@ window.addEventListener('popstate', (ev) => {
     let el = null; let count = b || 12; let duration = c || 15000;
     if (typeof a === 'string') el = document.querySelector(a);
     else if (a instanceof Element) el = a;
-    if (!el) el = document.querySelector('.site-logo') || logos[0];
+    if (!el) el = document.querySelector('.site-logo');
     if (el) spawnSparklesAt(el, count, duration);
   };
 })();
+
 
 /* Footprint canvas: spawn footprint shapes following the cursor and expire after 3s */
 // Footprint controller so we can stop/start on PJAX navigation
@@ -615,13 +617,23 @@ function initFootprints() {
 }
 
 // Start footprints now (and allow re-initialization after PJAX)
-let __footprintController = initFootprints();
+let __footprintController = null;
+function ensureFootprintsForCurrentPage(){
+  const hasHome = !!document.getElementById('home');
+  try { if (__footprintController && !hasHome) { __footprintController.stop(); __footprintController = null; } } catch(e){}
+  if (!__footprintController && hasHome) {
+    __footprintController = initFootprints();
+  }
+}
+
+// initialize footprints only if we're on the homepage
+ensureFootprintsForCurrentPage();
 
 // Re-initialize dynamic parts when PJAX replaces content
 window.addEventListener('content:replace', (ev) => {
   // Re-run positioning and shell handlers on the new content
   positionShellsBetween();
   attachShellHandlers(document);
-  try { __footprintController && __footprintController.stop(); } catch(e){}
-  __footprintController = initFootprints();
+  // check if new content contains #home
+  ensureFootprintsForCurrentPage();
 });
