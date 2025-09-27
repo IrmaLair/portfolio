@@ -692,6 +692,23 @@ function ensureFootprintsForCurrentPage(){
 // initialize footprints only if we're on the homepage
 ensureFootprintsForCurrentPage();
 
+// Update footer content depending on current page (remove 'All rights reserved' on Projects)
+function updateFooterForCurrentPage(){
+  try{
+    const footerSmall = document.querySelector('.site-footer .footer-inner small');
+    if (!footerSmall) return;
+    const inProjects = location.pathname.endsWith('/projects.html') || location.pathname.endsWith('projects.html') || (document.querySelector('main h1.handwriting') && document.querySelector('main h1.handwriting').textContent.trim() === 'Projects');
+    if (inProjects) {
+      // replace with a simpler copyright line keeping year span
+      const yr = (new Date()).getFullYear();
+      footerSmall.innerHTML = `© <span id="year">${yr}</span>&nbsp;Nidhi Surekha.`;
+    }
+  } catch(e){}
+}
+
+// Run once initially
+updateFooterForCurrentPage();
+
 // Re-initialize dynamic parts when PJAX replaces content
 window.addEventListener('content:replace', (ev) => {
   // Re-run positioning and shell handlers on the new content
@@ -711,4 +728,6 @@ window.addEventListener('content:replace', (ev) => {
       // Back-compat: also clear any nodes that might still be in the DOM
       document.querySelectorAll('.logo-sparkle').forEach(s => { try { s.remove(); } catch(e){} });
     } catch(e){}
+    // Update footer for current page (projects) after PJAX swap
+    try { updateFooterForCurrentPage(); } catch(e){}
 });
