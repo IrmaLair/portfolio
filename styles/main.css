@@ -349,8 +349,6 @@ body{
   :root{--handwriting-size:50px; --subheading-size:14px; --bodytext-size:12px}
   .handwriting{font-size:var(--handwriting-size)}
   .subheading{font-size:var(--subheading-size)}
-  /* Move heading & subheading up by 30px on phones */
-  .hero-content{transform: translateY(-30px);} 
 }
 
 /* Play sound overlay styles */
