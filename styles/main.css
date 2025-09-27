@@ -163,6 +163,8 @@ body{
 @media (max-width:480px){
   :root{--logo-size:88px}
   .site-logo{width:var(--logo-size);height:var(--logo-size)}
+  /* small-screen nudge: move logo 10px right and 10px down relative to default */
+  .site-logo{top:0px;left:-18px}
   .resume-btn{padding:6px 8px;font-size:12px}
 }
 .handwriting{font-family:Kalam, cursive;font-weight:700;margin:0;color:var(--ink);line-height:0.95;font-size:var(--handwriting-size)}
@@ -213,18 +215,27 @@ body{
 @media (max-width:600px){
   :root{--shell-gap:90px; --shell-size: 134px} /* phone increased ~+24% from 108px */
   .shells.absolute{min-height:0}
+  /* small-screen logo nudge: move 10px right and 10px down for better spacing */
+  .site-logo{top:0px;left:-18px}
   .shells.absolute .shell-btn{width:var(--shell-size);height:var(--shell-size)} /* phone */
-  /* make a more prominent V shape on portrait phones (increase vertical offset) */
-  .shells.absolute .shell-btn:nth-child(1){left:calc(50% - var(--shell-gap-dynamic, var(--shell-gap)));transform:translateX(calc(-50% - 100px)) translateY(calc(-18% + 50px)) rotate(-12deg)}
-  .shells.absolute .shell-btn:nth-child(2){left:50%;transform:translateX(-50%) translateY(calc(10% - 50px)) rotate(0deg)}
-  .shells.absolute .shell-btn:nth-child(3){left:calc(50% + var(--shell-gap-dynamic, var(--shell-gap)));transform:translateX(calc(-50% + 100px)) translateY(calc(-18% + 50px)) rotate(12deg)}
-  /* caption sizing for phone */
-  .shell-caption{font-size:20px}
+  /* Reduce horizontal offsets (was 100px) so captions don't spill off-screen on narrow viewports */
+  .shells.absolute .shell-btn:nth-child(1){left:calc(50% - var(--shell-gap-dynamic, var(--shell-gap)));transform:translateX(calc(-50% - 60px)) translateY(calc(-14% + 40px)) rotate(-12deg)}
+  .shells.absolute .shell-btn:nth-child(2){left:50%;transform:translateX(-50%) translateY(calc(8% - 40px)) rotate(0deg)}
+  .shells.absolute .shell-btn:nth-child(3){left:calc(50% + var(--shell-gap-dynamic, var(--shell-gap)));transform:translateX(calc(-50% + 60px)) translateY(calc(-14% + 40px)) rotate(12deg)}
+  /* slightly smaller captions and reduced lift on hover to avoid overlap with subheading */
+  .shell-caption{font-size:18px;margin-top:8px}
+  .shells.absolute .shell-btn:hover > .shell-caption,
+  .shells.absolute .shell-btn:focus-visible > .shell-caption{
+    transform: translateY(-12px);
+    transition: transform .22s cubic-bezier(.2,.9,.2,1);
+  }
 }
 
 /* Extra small screens: reduce gap further to keep shells visually centered with text */
 @media (max-width:420px){
-  :root{--shell-gap:84px}
+  :root{--shell-gap:64px}
+  /* extra-small phones: small extra nudge for the logo and tighter shell spacing */
+  .site-logo{left:-14px;top:2px}
 }
 
 .invisible{visibility:hidden}
