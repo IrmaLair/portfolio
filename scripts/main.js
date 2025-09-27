@@ -245,6 +245,51 @@ window.addEventListener('load', async () => {
   // recalc after a short delay in case fonts or images changed layout
   setTimeout(positionShellsBetween, 250);
 
+  // Splash overlay: show on initial full-load only (not on PJAX nav)
+  try {
+    if (!sessionStorage.getItem('splashShown')) {
+      // create overlay
+      const splash = document.createElement('div');
+      splash.className = 'splash-overlay';
+      splash.innerHTML = `<div class="splash-inner"><img class="splash-logo" src="assets/Logo.svg" alt="logo"></div>`;
+      document.body.appendChild(splash);
+      try { document.documentElement.classList.add('splash-lock-scroll'); } catch(e){}
+
+      // Wait for important assets: fonts + visible images
+      const minMs = 650; // keep splash visible at least this long
+      const maxMs = 4000; // give up after this long
+      const start = performance.now();
+
+      // Helper: wait for document fonts to be ready (if supported)
+      const fontsReady = (document.fonts && document.fonts.ready) ? document.fonts.ready : Promise.resolve();
+
+      // Helper: wait for first viewport images to load (logo already used as img src)
+      function waitForImages(timeout) {
+        const imgs = Array.from(document.images).filter(i => i.src && i.complete === false);
+        if (!imgs.length) return Promise.resolve();
+        return new Promise(res => {
+          let remaining = imgs.length;
+          const t = setTimeout(() => { try { res(); } catch(e){} }, timeout);
+          imgs.forEach(img => {
+            img.addEventListener('load', () => { remaining--; if (remaining <= 0) { clearTimeout(t); res(); } });
+            img.addEventListener('error', () => { remaining--; if (remaining <= 0) { clearTimeout(t); res(); } });
+          });
+        });
+      }
+
+      await Promise.race([Promise.all([fontsReady, waitForImages(2000)]), new Promise(r=>setTimeout(r, maxMs))]);
+      const elapsed = Math.max(0, performance.now() - start);
+      const remaining = Math.max(0, minMs - elapsed);
+      await new Promise(r => setTimeout(r, remaining));
+
+      // Fade and remove
+      splash.classList.add('splash-hidden');
+      try { document.documentElement.classList.remove('splash-lock-scroll'); } catch(e){}
+      setTimeout(() => { try { splash.remove(); } catch(e){} }, 600);
+      try { sessionStorage.setItem('splashShown', '1'); } catch(e){}
+    }
+  } catch(e){}
+
   // Initialize dynamic shell gap based on CSS --shell-gap (fallback 120px)
   const cssGap = getComputedStyle(document.documentElement).getPropertyValue('--shell-gap');
   const baseGap = cssGap ? parseInt(cssGap.trim()) : 120;

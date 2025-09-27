@@ -238,6 +238,16 @@ body{
 /* inner wrapper used to animate a lift without disturbing the absolute positioning transform on .shell-btn */
 .shell-inner{display:block;position:relative;width:100%;height:100%;transition:transform .28s cubic-bezier(.2,.9,.2,1),box-shadow .28s ease;transform-origin:center bottom;will-change:transform;transform:translateZ(0)}
 
+/* Splash overlay: full-screen centered logo shown on first load while assets hydrate */
+.splash-overlay{
+  position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:var(--sand);z-index:10050;pointer-events:none;transition:opacity .48s ease, visibility .48s ease;}
+.splash-overlay .splash-inner{pointer-events:none;display:flex;align-items:center;justify-content:center}
+.splash-logo{width:var(--logo-size);height:var(--logo-size);display:block}
+.splash-overlay.splash-hidden{opacity:0;visibility:hidden}
+
+/* When active, prevent scrolling to avoid layout shift during hydration */
+.splash-lock-scroll{overflow:hidden}
+
 /* Hover/Focus: raise the shell and strengthen the drop shadow to indicate actionability */
 .shells.absolute .shell-btn:hover .shell-inner,
 .shells.absolute .shell-btn:focus-visible .shell-inner{
