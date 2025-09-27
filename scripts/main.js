@@ -695,13 +695,15 @@ ensureFootprintsForCurrentPage();
 // Update footer content depending on current page (remove 'All rights reserved' on Projects)
 function updateFooterForCurrentPage(){
   try{
-    const footerSmall = document.querySelector('.site-footer .footer-inner small');
-    if (!footerSmall) return;
-    const inProjects = location.pathname.endsWith('/projects.html') || location.pathname.endsWith('projects.html') || (document.querySelector('main h1.handwriting') && document.querySelector('main h1.handwriting').textContent.trim() === 'Projects');
+    const footer = document.querySelector('.site-footer');
+    if (!footer) return;
+    const inProjects = location.pathname.indexOf('projects') !== -1 || (document.querySelector('main h1.handwriting') && document.querySelector('main h1.handwriting').textContent.trim().toLowerCase() === 'projects');
     if (inProjects) {
-      // replace with a simpler copyright line keeping year span
-      const yr = (new Date()).getFullYear();
-      footerSmall.innerHTML = `© <span id="year">${yr}</span>&nbsp;Nidhi Surekha.`;
+      // hide the footer while on Projects page (so the entire line is gone)
+      try { footer.style.display = 'none'; } catch(e){}
+    } else {
+      // restore footer visibility
+      try { footer.style.display = ''; } catch(e){}
     }
   } catch(e){}
 }
