@@ -3,7 +3,7 @@ services:
     name: portfolio
     repo: https://github.com/IrmaLair/portfolio
     branch: master
-  buildCommand: "$ build"
+    buildCommand: ""    # empty -> no build step
     publishPath: "."    # publish root where index.html lives
-  startCommand: "$ build-start"
+    env: {}
     env: {}
