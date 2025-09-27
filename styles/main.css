@@ -1,0 +1,341 @@
+:root{
+  --bg: #ffffff;
+  --sand: #f4e9d6;
+  --logo-outline: #2d6d8f; /* slightly darker blue than wave for contrast */
+  --logo-size: 176px; /* 4x larger than previous 44px */
+  --muted: #6b6b6b;
+  --accent: #ffb86b;
+  --ink: #303030;
+  --radius: 12px;
+  --container: 1100px;
+  --footer-h: 48px; /* height of the footer area used for shell centering */
+  --shell-gap: 250px; /* desktop default: 250px horizontal distance from center to each side shell */
+  /* single source of truth for shell sizing so all shells remain proportionate */
+  --shell-size: 267px; /* increased ~+24% from 215px */
+  /* typography size tokens (defaults = laptop) */
+  --handwriting-size: 80px; /* "Nidhi Surekha" on Laptop */
+  --subheading-size: 21px; /* "Experience Designer & Creative Technologist" on Laptop */
+  --bodytext-size: 16px; /* welcome text on Laptop */
+}
+
+*{
+  margin: 0;
+}
+
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;
+  font-family:Poppins, Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  background:var(--sand);
+  color:var(--ink);
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+  line-height:1.5;
+  position:relative;
+}
+
+/* footprint canvas: sits under the interactive layers (text, shells) and doesn't intercept pointer events */
+/* keep it visible but below other content — shells use z-index:4 and clones use 9999 */
+#footprint-canvas{position:fixed;left:0;top:0;right:0;bottom:0;pointer-events:none;z-index:1}
+/* tuning variable for footprint size */
+:root{--footprint-size: clamp(14px, 1.75vw, 24px); /* reduced overall footprint size by half */
+  /* lateral gap between left/right footprints (roughly 2x wider than previous) */
+  --footprint-gap: calc(var(--footprint-size) * 4.0);
+  /* footprint scale: 1 = desktop; will be reduced via media queries for tablet/phone */
+  --footprint-scale: 1;
+}
+
+/* Responsive footprint scaling: slightly reduce footprint size on tablets and phones so prints remain proportional */
+@media (max-width:900px){
+  :root{ --footprint-size: clamp(12px, 1.5vw, 18px); }
+  /* Tablets: make footprints 2x smaller */
+  :root{ --footprint-scale: 0.5; }
+}
+@media (max-width:600px){
+  :root{ --footprint-size: clamp(10px, 1.2vw, 14px); }
+  /* Phones: make footprints 4x smaller */
+  :root{ --footprint-scale: 0.25; }
+}
+
+.container{max-width:var(--container);margin:0 auto;padding:1.25rem 2rem}
+
+.site-header{border-bottom:1px solid rgba(11,23,32,0.06);position:sticky;top:0;background:rgba(255,255,255,0.7);backdrop-filter:blur(6px);z-index:60}
+.header-inner{display:flex;align-items:center;justify-content:space-between}
+.brand{font-weight:700;color:var(--ink);text-decoration:none}
+.nav{display:flex;gap:1rem}
+.nav a{color:var(--muted);text-decoration:none;font-weight:500}
+.nav a:hover{color:var(--ink)}
+.nav-toggle{display:none;background:none;border:0;color:var(--ink);font-size:1.2rem}
+
+/* sand overlay (subtle texture) - now covering the entire viewport */
+.sand-overlay{
+  /* make the sand texture visually fill the entire browser window */
+  position:fixed; /* cover the viewport */
+  inset:0; /* shorthand for top:0; right:0; bottom:0; left:0 */
+  pointer-events:none;
+  background-image: url('../assets/sand-texture-overlay.png');
+  background-repeat:no-repeat;
+  background-position:center center;
+  background-size:cover; /* scale to fill while preserving aspect ratio */
+  mix-blend-mode:overlay;
+  opacity:1; /* fully visible overlay per request */
+  z-index:2; /* sit beneath hero content but above static waves */
+}
+
+.hero{position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;flex:1;min-height:calc(100vh - 48px);padding:0;background:transparent}
+.hero .waves-wrapper{position:fixed;left:0;right:0;top:0;height:33vh;overflow:hidden;z-index:1;pointer-events:none}
+.hero .waves-wrapper svg{display:block;width:100%;height:100%;object-fit:cover}
+.hero .waves-wrapper .wave{transform:translate3d(0,0,0)}
+.hero .waves-wrapper .wave1{animation:waveX 18s linear infinite}
+.hero .waves-wrapper .wave2{animation:waveX 12s linear infinite}
+.hero .waves-wrapper .wave3{animation:waveX 24s linear infinite}
+
+@keyframes waveX{
+  0%{transform:translateX(0)}
+  100%{transform:translateX(-25%)}
+}
+.waves{width:100%;height:100%;display:block;margin:0;padding:0}
+/* (duplicate earlier definition removed) */
+
+/* On large screens tile the overlay to maintain texture density */
+@media (min-width:1200px){
+  .sand-overlay{background-repeat:repeat;background-size:30%;}
+}
+.hero-content{position:relative;z-index:3;padding:2rem;max-width:900px;text-align:center}
+
+/* Top actions overlay (logo + resume) placed inside the waves area */
+.waves-actions{position:absolute;left:0;right:0;top:0;display:flex;align-items:center;justify-content:space-between;padding:14px 20px;pointer-events:none;z-index:6}
+.waves-actions a{pointer-events:auto}
+.waves-actions .resume-btn{margin-left:auto}
+.site-logo{position:fixed;top:-10px;left:-28px;display:inline-flex;align-items:center;justify-content:center;width:var(--logo-size);height:var(--logo-size);border-radius:12px;text-decoration:none;z-index:10010;pointer-events:auto}
+.site-logo .logo-img{width:100%;height:100%;display:block}
+.site-logo img{display:block;width:100%;height:100%}
+/* Sparkle particles for the logo hover effect */
+.logo-sparkle{
+  position:fixed;
+  z-index:10020; /* ensure sparkles render above overlays */
+  width:6px;
+  height:6px;
+  background: radial-gradient(circle at 30% 30%, #fff 0%, rgba(255,255,255,0.9) 30%, rgba(255,240,200,0.5) 55%, rgba(255,240,200,0) 70%);
+  border-radius:50%;
+  pointer-events:none;
+  /* no initial transform or CSS animation: motion is handled by JS Web Animations */
+  opacity:0;
+  will-change:transform,opacity,filter;
+  /* much stronger glow: layered box-shadows and a subtle blur filter to read like stars */
+  box-shadow:
+    0 0 3px rgba(255,255,255,1),
+    0 0 10px rgba(255,250,220,0.98),
+    0 0 28px rgba(255,220,160,0.9),
+    0 0 60px rgba(255,200,120,0.65);
+  filter: blur(0.8px) saturate(1.3) contrast(1.1);
+  /* additive blending helps lights feel star-like against backgrounds */
+  mix-blend-mode: screen;
+}
+
+/* pulse/shimmer while the particle drifts */
+.logo-sparkle--pulse{
+  animation: sparklePulse 2400ms ease-in-out infinite; /* slower pulse to match feather fall */
+}
+
+@keyframes sparklePulse{
+  0% { filter: blur(0.6px) brightness(1); transform: scale(0.85); }
+  40% { filter: blur(2.2px) brightness(2.2); transform: scale(1.12); }
+  100% { filter: blur(0.6px) brightness(1); transform: scale(0.9); }
+}
+/* page logo should match the site logo's size and position so every page is consistent */
+.page-logo{display:inline-flex;position:fixed;top:-10px;left:-28px;width:var(--logo-size);height:var(--logo-size);align-items:center;justify-content:center;z-index:10010}
+.page-logo img{display:block;width:100%;height:100%}
+
+/* Resume button: white glassmorphism style */
+.resume-btn{display:inline-block;padding:10px 14px;border-radius:12px;background:rgba(255,255,255,0.18);color:#ffffff;border:1px solid rgba(255,255,255,1);box-shadow:0 6px 18px rgba(11,23,32,0.08);font-weight:400;text-decoration:none;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);font-family:Poppins, sans-serif}
+.resume-btn{display:inline-block;padding:10px 14px;border-radius:12px;background:rgba(255,255,255,0.18);color:#ffffff;border:1px solid rgba(255,255,255,1);box-shadow:0 6px 18px rgba(11,23,32,0.08);font-weight:400;text-decoration:none;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);font-family:Poppins, sans-serif}
+.resume-btn:hover{transform:translateY(-2px);box-shadow:0 10px 24px rgba(11,23,32,0.12)}
+.resume-btn:focus{outline:2px solid rgba(255,255,255,0.92);outline-offset:3px}
+
+@media (max-width:900px){
+  .waves-actions{padding:10px 14px}
+  :root{--logo-size:120px}
+  .site-logo{width:var(--logo-size);height:var(--logo-size)}
+  .resume-btn{padding:7px 10px;font-size:13px}
+}
+@media (max-width:480px){
+  :root{--logo-size:88px}
+  .site-logo{width:var(--logo-size);height:var(--logo-size)}
+  .resume-btn{padding:6px 8px;font-size:12px}
+}
+.handwriting{font-family:Kalam, cursive;font-weight:700;margin:0;color:var(--ink);line-height:0.95;font-size:var(--handwriting-size)}
+.subheading{font-family:Poppins, sans-serif;font-weight:400;margin:0;color:var(--ink);margin-top:6px;font-size:var(--subheading-size)}
+.body-text{font-family:Poppins, sans-serif;font-weight:400;margin:0;color:var(--ink);font-size:var(--bodytext-size);max-width:58ch;margin-top:6px}
+.lead{color:var(--muted);max-width:55ch}
+
+/* wave motion */
+.wave{transform:translate3d(0,0,0)}
+.wave1{animation:waveMove 10s linear infinite}
+.wave2{animation:waveMove 14s linear infinite}
+.wave3{animation:waveMove 18s linear infinite}
+
+@keyframes waveMove{
+  0%{transform:translateX(0)}
+  100%{transform:translateX(-20%)}
+}
+
+/* Shell buttons */
+.shells{display:flex;gap:1rem;margin-top:0.75rem;position:relative}
+
+/* allow shells to be absolutely positioned on larger screens */
+.shells.absolute{position:fixed;left:50%;transform:translateX(-50%);z-index:4;display:block;pointer-events:auto}
+/* smooth repositioning when JS updates `top` on resize */
+.shells{transition:top .32s cubic-bezier(.2,.9,.2,1), transform .28s cubic-bezier(.2,.9,.2,1)}
+
+/* allow explicit fixed-bottom positioning: when using the fixed-bottom variant the shells will sit
+  a fixed distance from the viewport bottom. This overrides earlier top-based centering logic. */
+.shells.fixed-bottom{top:auto;bottom:120px}
+
+/* arrange three shells in a slight V shape. We use CSS variables for spacing and offsets so it's easy to tweak. */
+.shells.absolute .shell-btn{position:absolute;margin:0;width:var(--shell-size);height:var(--shell-size);top:0} /* use single --shell-size so shells scale proportionately */
+.shells.absolute .shell-btn:nth-child(1){left:50%;transform:translateX(calc(-50% - var(--shell-gap-dynamic, var(--shell-gap)) - 100px)) translateY(calc(-12% + 50px)) rotate(-12deg)} /* left shell (About) — moved left 100px, down 50px */
+.shells.absolute .shell-btn:nth-child(2){left:50%;transform:translateX(calc(-50%)) translateY(calc(2% - 50px)) rotate(0deg)} /* center shell (Projects) — moved up 50px */
+.shells.absolute .shell-btn:nth-child(3){left:50%;transform:translateX(calc(-50% + var(--shell-gap-dynamic, var(--shell-gap)) + 100px)) translateY(calc(-12% + 50px)) rotate(12deg)} /* right shell (Contact) — moved right 100px, down 50px */
+
+/* Slightly reduce size on small screens and stack with spacing */
+@media (max-width:900px){
+  :root{--shell-gap:200px; --shell-size: 205px} /* tablet increased ~+24% from 165px */
+  .shells.absolute .shell-btn{width:var(--shell-size);height:var(--shell-size)} /* tablet */
+  .shells.absolute .shell-btn:nth-child(1){left:calc(50% - var(--shell-gap-dynamic, var(--shell-gap)));transform:translateX(calc(-50% - 100px)) translateY(calc(-8% + 50px)) rotate(-10deg)}
+  .shells.absolute .shell-btn:nth-child(2){left:50%;transform:translateX(-50%) translateY(calc(4% - 50px)) rotate(0deg)}
+  .shells.absolute .shell-btn:nth-child(3){left:calc(50% + var(--shell-gap-dynamic, var(--shell-gap)));transform:translateX(calc(-50% + 100px)) translateY(calc(-8% + 50px)) rotate(10deg)}
+  /* Tablet caption sizing */
+  .shell-caption{font-size:26px}
+}
+
+@media (max-width:600px){
+  :root{--shell-gap:90px; --shell-size: 134px} /* phone increased ~+24% from 108px */
+  .shells.absolute{min-height:0}
+  .shells.absolute .shell-btn{width:var(--shell-size);height:var(--shell-size)} /* phone */
+  /* make a more prominent V shape on portrait phones (increase vertical offset) */
+  .shells.absolute .shell-btn:nth-child(1){left:calc(50% - var(--shell-gap-dynamic, var(--shell-gap)));transform:translateX(calc(-50% - 100px)) translateY(calc(-18% + 50px)) rotate(-12deg)}
+  .shells.absolute .shell-btn:nth-child(2){left:50%;transform:translateX(-50%) translateY(calc(10% - 50px)) rotate(0deg)}
+  .shells.absolute .shell-btn:nth-child(3){left:calc(50% + var(--shell-gap-dynamic, var(--shell-gap)));transform:translateX(calc(-50% + 100px)) translateY(calc(-18% + 50px)) rotate(12deg)}
+  /* caption sizing for phone */
+  .shell-caption{font-size:20px}
+}
+
+/* Extra small screens: reduce gap further to keep shells visually centered with text */
+@media (max-width:420px){
+  :root{--shell-gap:84px}
+}
+
+.invisible{visibility:hidden}
+.shell-btn{background:transparent;border:0;padding:0;cursor:pointer;border-radius:12px;transition:box-shadow .22s ease;width:var(--shell-size);height:var(--shell-size);display:inline-flex;align-items:center;justify-content:center} /* base size uses --shell-size */
+.shell-btn svg{width:100%;height:100%;display:block;background:transparent} /* let SVG scale with button */
+.shell-btn img{width:100%;height:100%;display:block;object-fit:contain;background:transparent;border-radius:12px}
+
+/* Remove base stacked drop-shadow to avoid any box-like outline; rely on alpha-based SVG filter on hover */
+.shell-btn img{filter:none}
+
+/* inner wrapper used to animate a lift without disturbing the absolute positioning transform on .shell-btn */
+.shell-inner{display:block;position:relative;width:100%;height:100%;transition:transform .28s cubic-bezier(.2,.9,.2,1),box-shadow .28s ease;transform-origin:center bottom;will-change:transform;transform:translateZ(0)}
+
+/* Hover/Focus: raise the shell and strengthen the drop shadow to indicate actionability */
+.shells.absolute .shell-btn:hover .shell-inner,
+.shells.absolute .shell-btn:focus-visible .shell-inner{
+  transform:translateY(-10px) scale(1.02) !important;
+}
+
+/* Ensure pointer events are enabled and provide an explicit image-level transform as a fallback */
+.shells.absolute .shell-btn,
+.shells.absolute .shell-btn .shell-inner{pointer-events:auto}
+.shells.absolute .shell-btn:hover .shell-inner img{
+  transform:translateY(-10px) scale(1.02);
+  transition:transform .28s cubic-bezier(.2,.9,.2,1);
+  /* Apply the silhouette shadow filter that follows the SVG alpha. The filter creates a blurred, offset shadow. */
+  filter: url('#shell-outline');
+}
+
+/* Active (pressed) state: smaller nudge so it feels pressed */
+.shell-btn:active .shell-inner{transform:translateY(-5px) scale(0.995);transition:transform .12s ease}
+
+
+/* caption under each shell */
+.shell-caption{display:block;font-family:Kalam, cursive;font-weight:400;text-align:center;margin-top:12px;color:var(--ink);font-size:clamp(18px,2.2vw,26px)}
+
+/* Move caption up when the shell is hovered/focused so text rides with the lifted shell */
+.shells.absolute .shell-btn:hover > .shell-caption,
+.shells.absolute .shell-btn:focus-visible > .shell-caption{
+  transform: translateY(-20px); /* doubled raise from -10px to -20px */
+  transition: transform .28s cubic-bezier(.2,.9,.2,1);
+}
+.shell-btn svg path{stroke-linecap:round;stroke-linejoin:round}
+.shell-btn svg g{mix-blend-mode:normal}
+
+.shell-btn svg path[stroke]{filter:none}
+/* On hover/focus, give stroked paths a subtle dark shadow to match the silhouette cast shadow */
+.shells.absolute .shell-btn:hover svg path[stroke],
+.shells.absolute .shell-btn:focus-visible svg path[stroke]{
+  filter: drop-shadow(0 4px 8px rgba(0,0,0,0.06));
+}
+.shell-btn:active .shell-inner{transform:translateY(-5px);transition:transform .12s ease}
+
+/* throw animation (moves to top center and fades) */
+.throwing{
+  position:fixed!important;
+  left:50%!important;
+  top:10%!important;
+  /* Keep size identical to the original: remove any scaling applied during the throw */
+  transform:translate(-50%,-10%);
+  transition:transform .7s cubic-bezier(.2,.8,.2,1),opacity .6s ease-in-out;
+  z-index:9999;
+  opacity:1!important;
+}
+.shell-hidden{opacity:0;transition:opacity .4s}
+
+/* Projects */
+.section{padding:3rem 0}
+.projects-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.25rem}
+.card{background:#ffffff;border-radius:12px;overflow:hidden;transition:transform .22s}
+.card img{width:100%;height:160px;object-fit:cover;display:block}
+.card-body{padding:1rem}
+/* caption under each shell */
+.shell-caption{display:block;font-family:Kalam, cursive;font-weight:400;text-align:center;margin-top:12px;color:var(--ink);font-size:clamp(18px,2.2vw,26px)}
+.card:hover{transform:translateY(-6px);box-shadow:0 12px 30px rgba(11,23,32,.06)}
+
+/* About & contact */
+.about p, .contact p{color:var(--muted);max-width:70ch}
+
+/* Footer */
+.site-footer{border-top:none;padding:0.35rem 0;text-align:center;color:var(--muted);position:fixed;left:0;right:0;bottom:0;background:transparent}
+.footer-inner{max-width:var(--container);margin:0 auto;padding:0 1rem}
+
+/* Fixed body text near the bottom of the viewport as requested (50px from bottom) */
+.body-text{position:fixed;left:50%;bottom:calc(var(--footer-h) + 50px);transform:translateX(-50%);max-width:70ch;text-align:center;z-index:4;padding:0 1rem}
+
+/* If shells are placed using the fixed-bottom helper class, ensure their child buttons remain positioned correctly relative to the container */
+.shells.fixed-bottom .shell-btn{left:50%}
+
+/* Accessibility hide for sr-only */
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+
+@media (max-width:600px){
+  .projects-grid{grid-template-columns:1fr}
+  .container{padding:1rem}
+  /* Phone sizes (requested): make heading/subheading/body-text follow exact pixel targets */
+  :root{--handwriting-size:50px; --subheading-size:14px; --bodytext-size:12px}
+  .handwriting{font-size:var(--handwriting-size)}
+  .subheading{font-size:var(--subheading-size)}
+}
+
+/* Play sound overlay styles */
+#play-sound-overlay{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:linear-gradient(rgba(10,20,30,0.08), rgba(255,255,255,0.02));z-index:10060}
+#play-sound-overlay .play-inner{background:rgba(255,255,255,0.95);padding:18px 22px;border-radius:12px;box-shadow:0 10px 30px rgba(11,23,32,0.12);display:flex;flex-direction:column;align-items:center}
+#play-sound-overlay .btn{background:var(--accent);border:none;padding:10px 18px;border-radius:10px;color:#fff;font-weight:600}
+#play-sound-overlay .play-hint{color:var(--muted);font-size:13px;margin-top:8px}
+@media (min-width:900px){ #play-sound-overlay{background:transparent;top:18vh} }
+
+/* Persistent mute/unmute control in top-right */
+/* mute-toggle styles removed per user request */
+
+/* When a shell is thrown, mark it as spent and fade it out before hiding */
+.shell-spent { opacity: 1; transition: opacity 0.25s ease; }
+.shell-hide-fade { opacity: 0; transition: opacity 2s ease; }
