@@ -481,17 +481,23 @@ window.addEventListener('popstate', (ev) => {
   // Keep a live reference function that finds logos when called (handles dynamic pages)
   function findLogos(){ return Array.from(document.querySelectorAll('.site-logo, .page-logo')); }
 
+  // track active interval & timeout ids so we can clear them even if the originating element is removed
+  const __activeSparkleIntervals = new Set();
+  const __activeSparkleTimeouts = new Set();
+  try { window.__activeSparkleIntervals = __activeSparkleIntervals; window.__activeSparkleTimeouts = __activeSparkleTimeouts; } catch(e){}
+
   function spawnSparklesAt(el, count, duration = 15000){
-    if (!el || !(el.getBoundingClientRect)) return; // guard against missing targets
+    if (!el || !(el.getBoundingClientRect)) return;
     const rect = el.getBoundingClientRect();
-    // guard against invisible or zero-size targets (would spawn at 0,0)
-    if (!rect.width && !rect.height) return;
+    if (!rect || (!rect.width && !rect.height)) return; // guard against invisible or removed targets
     const centerX = rect.left + rect.width / 2;
     const centerY = rect.top + rect.height / 2;
 
     for (let i = 0; i < count; i++){
       const startDelay = Math.random() * 220;
-      setTimeout(() => {
+      const tid = setTimeout(() => {
+        // once the timeout fires, remove it from tracking
+        try { __activeSparkleTimeouts.delete(tid); } catch(e){}
         const s = document.createElement('div');
         s.className = 'logo-sparkle';
         const size = 4 + Math.floor(Math.random() * 3); // 4..6px
@@ -534,6 +540,7 @@ window.addEventListener('popstate', (ev) => {
 
         anim.onfinish = () => { try { s.remove(); } catch (e) {} };
       }, startDelay);
+      __activeSparkleTimeouts.add(tid);
     }
   }
 
@@ -545,9 +552,12 @@ window.addEventListener('popstate', (ev) => {
       spawnSparklesAt(el, 12, 15000);
       sparkleInterval = setInterval(() => spawnSparklesAt(el, 4, 14000), 1200);
       try { el.dataset.__sparkleInterval = String(sparkleInterval); } catch(e){}
+      try { __activeSparkleIntervals.add(sparkleInterval); } catch(e){}
       try { AudioManager.play('logo-sparkle', { restart:true }); } catch(e){}
     }
-    function stopSparks(){ if (sparkleInterval) { clearInterval(sparkleInterval); sparkleInterval = null; } }
+    function stopSparks(){
+      try { if (sparkleInterval) { clearInterval(sparkleInterval); __activeSparkleIntervals.delete(sparkleInterval); sparkleInterval = null; } } catch(e){}
+    }
     // pointer events work for mouse/touch/pen and are more reliable for interactive elements
     el.addEventListener('pointerenter', startSparks);
     el.addEventListener('pointerleave', stopSparks);
@@ -641,9 +651,14 @@ window.addEventListener('content:replace', (ev) => {
   ensureFootprintsForCurrentPage();
     // clear any lingering logo sparkle intervals and remove active sparkle nodes
     try {
+      // clear intervals stored on any remaining elements
       document.querySelectorAll('[data-__sparkleInterval]').forEach(n => {
-        try { const id = Number(n.dataset.__sparkleInterval); if (id) clearInterval(id); delete n.dataset.__sparkleInterval; } catch(e){}
+        try { const id = Number(n.dataset.__sparkleInterval); if (id) { clearInterval(id); } delete n.dataset.__sparkleInterval; } catch(e){}
       });
+      // clear any intervals/timeouts that were active but whose originating element was removed
+  try { if (window.__activeSparkleIntervals && (window.__activeSparkleIntervals instanceof Set)) { for (const id of window.__activeSparkleIntervals) { try { clearInterval(id); } catch(e){} } window.__activeSparkleIntervals.clear(); } } catch(e){}
+  try { if (window.__activeSparkleTimeouts && (window.__activeSparkleTimeouts instanceof Set)) { for (const id of window.__activeSparkleTimeouts) { try { clearTimeout(id); } catch(e){} } window.__activeSparkleTimeouts.clear(); } } catch(e){}
+      // Back-compat: also clear any nodes that might still be in the DOM
       document.querySelectorAll('.logo-sparkle').forEach(s => { try { s.remove(); } catch(e){} });
     } catch(e){}
 });
