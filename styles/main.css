@@ -227,6 +227,14 @@ body{
   */
   .site-logo{left:-18px; top:0px}
   .shells.absolute{transform:translateX(calc(-50% - 20px));}
+
+  /* Further reduce the Projects-to-Contact spacing by moving the right shell 20px left
+    (this reduces the horizontal gap between center and right shells without affecting desktop) */
+  .shells.absolute .shell-btn:nth-child(3){
+   transform: translateX(calc(-50% + 100px - 20px)) translateY(calc(-18% + 50px)) rotate(12deg);
+  }
+  /* Extra overall shift: move the whole container another 10px left */
+  .shells.absolute{transform:translateX(calc(-50% - 30px));}
 }
 
 /* Extra small screens: reduce gap further to keep shells visually centered with text */
