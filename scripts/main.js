@@ -484,6 +484,8 @@ window.addEventListener('popstate', (ev) => {
   function spawnSparklesAt(el, count, duration = 15000){
     if (!el || !(el.getBoundingClientRect)) return; // guard against missing targets
     const rect = el.getBoundingClientRect();
+    // guard against invisible or zero-size targets (would spawn at 0,0)
+    if (!rect.width && !rect.height) return;
     const centerX = rect.left + rect.width / 2;
     const centerY = rect.top + rect.height / 2;
 
@@ -542,6 +544,7 @@ window.addEventListener('popstate', (ev) => {
     function startSparks(){
       spawnSparklesAt(el, 12, 15000);
       sparkleInterval = setInterval(() => spawnSparklesAt(el, 4, 14000), 1200);
+      try { el.dataset.__sparkleInterval = String(sparkleInterval); } catch(e){}
       try { AudioManager.play('logo-sparkle', { restart:true }); } catch(e){}
     }
     function stopSparks(){ if (sparkleInterval) { clearInterval(sparkleInterval); sparkleInterval = null; } }
@@ -636,4 +639,11 @@ window.addEventListener('content:replace', (ev) => {
   attachShellHandlers(document);
   // check if new content contains #home
   ensureFootprintsForCurrentPage();
+    // clear any lingering logo sparkle intervals and remove active sparkle nodes
+    try {
+      document.querySelectorAll('[data-__sparkleInterval]').forEach(n => {
+        try { const id = Number(n.dataset.__sparkleInterval); if (id) clearInterval(id); delete n.dataset.__sparkleInterval; } catch(e){}
+      });
+      document.querySelectorAll('.logo-sparkle').forEach(s => { try { s.remove(); } catch(e){} });
+    } catch(e){}
 });
