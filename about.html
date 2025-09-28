@@ -54,5 +54,86 @@
   </main>
 
   <script src="scripts/main.js"></script>
+  <script>
+    (function(){
+      // progressive: if user prefers reduced motion, don't animate
+      const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const galleryPath = 'assets/about-gallery/';
+      const images = [
+        'althahand.jpg',
+        'birddive.jpeg',
+        'bullying.png',
+        'butterflies.jpg',
+        'coexistence.png',
+        'coralclay.jpg',
+        'digital painting.jpg',
+        'doll.jpg',
+        'fishclay.jpg',
+        'ganapati.jpg',
+        'gloom.jpeg',
+        'green.jpg',
+        'kathakali.png',
+        'lilostitch.jpg',
+        'look to observe.jpg',
+        'love.jpg',
+        'lovebirds.jpg',
+        'luck.jpg',
+        'mango.jpg',
+        'nostairs.jpg',
+        'NSD.jpg',
+        'octopuss.jpg',
+        'pacmanclay.jpg',
+        'palm.jpg',
+        'Patterns.jpg',
+        'reflections.jpg',
+        'rose.jpeg',
+        'SOUL.png',
+        'splayedcat.jpg',
+        'sun1.jpg',
+        'sun2.jpg',
+        'sun3.jpg',
+        'triplets.jpg',
+        'tropical.jpeg',
+        'type 1 font.png',
+        'wilhelmina.jpg',
+        'windchime.jpg',
+        'wish.jpg'
+      ];
+      const track = document.querySelector('.marquee-track');
+      if(!track) return;
+
+      // helper to create img nodes
+      function makeItems(){
+        const fragment = document.createDocumentFragment();
+        images.forEach(name=>{
+          const item = document.createElement('div'); item.className='marquee-item';
+          const img = document.createElement('img');
+          img.src = encodeURI(galleryPath + name);
+          img.alt = name.replace(/\.[^.]+$/,'').replace(/[-_]/g,' ').trim();
+          img.loading = 'lazy';
+          item.appendChild(img);
+          fragment.appendChild(item);
+        });
+        return fragment;
+      }
+
+      // Populate a single sequential list of images so users can manually scroll.
+      track.appendChild(makeItems());
+
+      // basic accessibility: allow keyboard arrow scrolling when focus is on the marquee
+      const marqueeWrap = document.querySelector('.about-gallery .marquee');
+      marqueeWrap.tabIndex = 0; // make it focusable
+      marqueeWrap.addEventListener('keydown', (e)=>{
+        const step = 160; // pixels per arrow press
+        if(e.key === 'ArrowRight'){
+          marqueeWrap.scrollBy({ left: step, behavior: 'smooth' });
+          e.preventDefault();
+        } else if(e.key === 'ArrowLeft'){
+          marqueeWrap.scrollBy({ left: -step, behavior: 'smooth' });
+          e.preventDefault();
+        }
+      });
+      })();
+  </script>
 </body>
 </html>
