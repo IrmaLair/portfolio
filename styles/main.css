@@ -327,7 +327,7 @@ body.projects-page h1.handwriting{color:#303030; font-size:var(--handwriting-siz
 
 /* Splash overlay: full-screen centered logo shown on first load while assets hydrate */
 .splash-overlay{
-  position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:var(--sand);z-index:10050;pointer-events:none;transition:opacity .48s ease, visibility .48s ease;}
+  position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:var(--sand);/* lower z-index so a failed/missing JS won't permanently hide page content on deploy */z-index:2;pointer-events:none;transition:opacity .48s ease, visibility .48s ease;}
 .splash-overlay .splash-inner{pointer-events:none;display:flex;align-items:center;justify-content:center}
 .splash-logo{width:var(--logo-size);height:var(--logo-size);display:block}
 .splash-overlay.splash-hidden{opacity:0;visibility:hidden}

@@ -823,6 +823,109 @@ window.addEventListener('content:replace', (ev) => {
     try { updateFooterForCurrentPage(); } catch(e){}
 });
 
+  // --- Page-specific initializers moved from inline scripts in HTML ---
+  function initAboutGallery(root = document){
+    try{
+      const marqueeWrap = root.querySelector('.about-gallery .marquee');
+      const track = root.querySelector('.marquee-track');
+      if(!marqueeWrap || !track) return;
+      // if already initialized, skip
+      if(track.dataset.__aboutGalleryInit) return; track.dataset.__aboutGalleryInit = '1';
+
+      const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const galleryPath = 'assets/about-gallery/';
+      const images = [
+        'althahand.jpg','birddive.jpeg','bullying.png','butterflies.jpg','coexistence.png','coralclay.jpg','digital painting.jpg','doll.jpg','fishclay.jpg','ganapati.jpg','gloom.jpeg','green.jpg','kathakali.png','lilostitch.jpg','look to observe.jpg','love.jpg','lovebirds.jpg','luck.jpg','mango.jpg','nostairs.jpg','NSD.jpg','octopuss.jpg','pacmanclay.jpg','palm.jpg','Patterns.jpg','reflections.jpg','rose.jpeg','SOUL.png','splayedcat.jpg','sun1.jpg','sun2.jpg','sun3.jpg','triplets.jpg','tropical.jpeg','type 1 font.png','wilhelmina.jpg','windchime.jpg','wish.jpg'
+      ];
+
+      function makeItems(){
+        const fragment = document.createDocumentFragment();
+        images.forEach(name=>{
+          const item = document.createElement('div'); item.className='marquee-item';
+          const img = document.createElement('img');
+          img.src = encodeURI(galleryPath + name);
+          img.alt = name.replace(/\.[^.]+$/,'').replace(/[-_]/g,' ').trim();
+          img.loading = 'lazy';
+          item.appendChild(img);
+          fragment.appendChild(item);
+        });
+        return fragment;
+      }
+
+      track.appendChild(makeItems());
+
+      // keyboard scrolling support
+      marqueeWrap.tabIndex = 0;
+      marqueeWrap.addEventListener('keydown', (e)=>{
+        const step = 160;
+        if(e.key === 'ArrowRight'){ marqueeWrap.scrollBy({ left: step, behavior: 'smooth' }); e.preventDefault(); }
+        else if(e.key === 'ArrowLeft'){ marqueeWrap.scrollBy({ left: -step, behavior: 'smooth' }); e.preventDefault(); }
+      });
+    }catch(e){console.error('initAboutGallery failed', e);}  
+  }
+
+  function initProjectsPage(root = document){
+    try{
+      const container = root.getElementById ? root : document;
+      const chipsBar = container.getElementById('category-chips');
+      const categoryGrid = container.getElementById('category-grid');
+      if(!chipsBar || !categoryGrid) return; // not a projects page
+      if(categoryGrid.dataset.__projectsInit) return; categoryGrid.dataset.__projectsInit = '1';
+
+      // The PROJECTS_DATA and helper functions are defined inline in the original HTML.
+      // To avoid duplicating the large data here, attempt to read a global PROJECTS_DATA and fallback to nothing.
+      if (typeof window.PROJECTS_DATA === 'undefined') return; // leave page HTML's inline script to set PROJECTS_DATA if necessary
+
+      // Reuse the createCard and related helpers from the HTML (if present globally), otherwise define minimal versions.
+      function slugify(name){ return name.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,''); }
+      function createCard(p){
+        const a = document.createElement('a'); a.className = 'card-link'; a.setAttribute('role','link'); a.setAttribute('aria-label', p['Project Name']); a.setAttribute('tabindex','0');
+        const slug = (p.slug && p.slug.toString().trim()) ? p.slug.toString().trim() : (slugify(p['Project Name']) + '-' + p.row);
+        a.href = 'projects/' + slug + '.html';
+        const article = document.createElement('article'); article.className='card';
+        const img = document.createElement('img'); img.src='assets/project1.svg'; img.alt=p['Project Name'];
+        const body = document.createElement('div'); body.className='card-body';
+        const h3 = document.createElement('h3'); h3.textContent = p['Project Name'];
+        const tagsRaw = p['Tags'] || ''; const tagList = tagsRaw.split(/\n|,/).map(t=>t.trim()).filter(Boolean);
+        const tagsWrap = document.createElement('div'); tagsWrap.className='tag-list';
+        tagList.forEach(t=>{ const s = document.createElement('span'); s.className='tag-pill'; s.textContent = t; tagsWrap.appendChild(s); });
+        const duration = (p['Duration'] && p['Duration'].trim() && p['Duration'].trim() !== '-') ? p['Duration'].trim() : (p['Time']||'');
+        const metaLine = document.createElement('div'); metaLine.className='project-meta'; metaLine.textContent = duration ? ('Individual · ' + duration) : 'Individual';
+        body.appendChild(h3); if(tagList.length>0) body.appendChild(tagsWrap); body.appendChild(metaLine);
+        article.appendChild(img); article.appendChild(body); a.appendChild(article);
+        return a;
+      }
+
+      // If a global function renderChip exists from inline HTML, reuse it; otherwise do a simple render picking categories from data
+      const data = window.PROJECTS_DATA || [];
+      const categories = Array.from(new Set(data.map(x=> (x.Category||'').trim()).filter(Boolean))).sort();
+      // basic chips render
+      categories.forEach(cat=>{
+        const btn = document.createElement('button'); btn.className='chip'; btn.type='button'; btn.textContent = cat; btn.addEventListener('click', ()=>{
+          Array.from(chipsBar.querySelectorAll('.chip')).forEach(c=>c.classList.remove('chip--active'));
+          btn.classList.add('chip--active'); categoryGrid.innerHTML='';
+          const list = data.filter(x=> (x.Category||'').trim()===cat);
+          list.forEach(p=> categoryGrid.appendChild(createCard(p)));
+        });
+        chipsBar.appendChild(btn);
+      });
+      // auto-click first chip
+      const first = chipsBar.querySelector('.chip'); if(first) first.click();
+    }catch(e){console.error('initProjectsPage failed', e);}  
+  }
+
+  // run initializers on load
+  window.addEventListener('load', () => {
+    initAboutGallery(document);
+    // PROJECTS_DATA may be defined inline in the projects page; if so, call initProjectsPage after a tick
+    setTimeout(() => initProjectsPage(document), 80);
+  });
+
+  // also run on PJAX page replacement
+  window.addEventListener('content:replace', (ev) => {
+    try{ initAboutGallery(document); initProjectsPage(document); } catch(e){}
+  });
+
   // Ensure interior pages that may not include the overlay element still show the sand texture
   // and that any `.shell-btn` elements are attached. This is idempotent and safe to run on every page.
   (function ensureOverlayAndShells(){
