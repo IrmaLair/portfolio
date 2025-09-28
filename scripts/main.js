@@ -838,28 +838,82 @@ window.addEventListener('content:replace', (ev) => {
         'althahand.jpg','birddive.jpeg','bullying.png','butterflies.jpg','coexistence.png','coralclay.jpg','digital painting.jpg','doll.jpg','fishclay.jpg','ganapati.jpg','gloom.jpeg','green.jpg','kathakali.png','lilostitch.jpg','look to observe.jpg','love.jpg','lovebirds.jpg','luck.jpg','mango.jpg','nostairs.jpg','NSD.jpg','octopuss.jpg','pacmanclay.jpg','palm.jpg','Patterns.jpg','reflections.jpg','rose.jpeg','SOUL.png','splayedcat.jpg','sun1.jpg','sun2.jpg','sun3.jpg','triplets.jpg','tropical.jpeg','type 1 font.png','wilhelmina.jpg','windchime.jpg','wish.jpg'
       ];
 
-      function makeItems(){
-        const fragment = document.createDocumentFragment();
-        images.forEach(name=>{
-          const item = document.createElement('div'); item.className='marquee-item';
+      // Helper to build marquee items and return an array of elements
+      function buildItems(){
+        return images.map(name => {
+          const item = document.createElement('div'); item.className = 'marquee-item';
           const img = document.createElement('img');
           img.src = encodeURI(galleryPath + name);
           img.alt = name.replace(/\.[^.]+$/,'').replace(/[-_]/g,' ').trim();
           img.loading = 'lazy';
           item.appendChild(img);
-          fragment.appendChild(item);
+          return item;
         });
-        return fragment;
       }
 
-      track.appendChild(makeItems());
+      // populate track twice (duplicate) so we can create a seamless looping scroll by adjusting scrollLeft
+      const nodes = buildItems();
+      nodes.forEach(n => track.appendChild(n));
+      // clone appended nodes to create the loop
+      nodes.forEach(n => track.appendChild(n.cloneNode(true)));
 
-      // keyboard scrolling support
+      // native keyboard support
       marqueeWrap.tabIndex = 0;
       marqueeWrap.addEventListener('keydown', (e)=>{
         const step = 160;
         if(e.key === 'ArrowRight'){ marqueeWrap.scrollBy({ left: step, behavior: 'smooth' }); e.preventDefault(); }
         else if(e.key === 'ArrowLeft'){ marqueeWrap.scrollBy({ left: -step, behavior: 'smooth' }); e.preventDefault(); }
+      });
+
+      // Auto-scroll implementation using requestAnimationFrame so it's native scroll (no CSS marquee)
+      // speed in pixels per second
+      const baseSpeed = prefersReduced ? 0 : 40; // px/sec default
+      let speed = baseSpeed;
+      let rafId = null;
+      let last = performance.now();
+
+      function step(now){
+        const dt = Math.max(0, now - last) / 1000;
+        last = now;
+        if (speed > 0) {
+          try {
+            marqueeWrap.scrollLeft += dt * speed;
+            // When we've scrolled past half of the track (original content), wrap back seamlessly
+            const half = track.scrollWidth / 2;
+            if (marqueeWrap.scrollLeft >= half) {
+              marqueeWrap.scrollLeft = marqueeWrap.scrollLeft - half;
+            }
+          } catch(e) {}
+        }
+        rafId = window.requestAnimationFrame(step);
+      }
+
+      // start loop
+      last = performance.now();
+      rafId = window.requestAnimationFrame(step);
+
+      // store raf id so it can be cancelled if the page is swapped
+      track.dataset.__aboutGalleryRaf = String(rafId || '0');
+
+      // Hover behaviour: triple speed on pointerenter, restore on leave
+      marqueeWrap.addEventListener('pointerenter', () => { try { speed = baseSpeed * 3; } catch(e){} }, { passive:true });
+      marqueeWrap.addEventListener('pointerleave', () => { try { speed = baseSpeed; } catch(e){} }, { passive:true });
+      marqueeWrap.addEventListener('focus', () => { try { speed = baseSpeed * 3; } catch(e){} }, true);
+      marqueeWrap.addEventListener('blur', () => { try { speed = baseSpeed; } catch(e){} }, true);
+
+      // Respect reduced motion: if user prefers reduced motion, stop auto-scrolling
+      const mq = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)');
+      if (mq && mq.matches) {
+        // cancel RAF
+        try { if (rafId) { cancelAnimationFrame(rafId); track.dataset.__aboutGalleryRaf = '0'; } } catch(e){}
+      }
+
+      // When content is replaced via PJAX, cancel RAF to avoid orphan loops
+      window.addEventListener('content:replace', () => {
+        try {
+          const id = Number(track.dataset.__aboutGalleryRaf || 0);
+          if (id) cancelAnimationFrame(id);
+        } catch(e){}
       });
     }catch(e){console.error('initAboutGallery failed', e);}  
   }

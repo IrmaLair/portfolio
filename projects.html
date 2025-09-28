@@ -22,262 +22,104 @@
   <h1 class="handwriting" style="text-align:center;">Projects</h1>
 
     <section id="projects-app" style="margin-top:1.5rem;">
-  <!-- Removed separate Featured section; use the chips below to view Featured or category lists -->
-
       <div class="chips-row">
-        <div id="category-chips"></div>
+        <div id="category-chips" aria-label="Project categories"></div>
       </div>
 
-      <div id="category-grid" class="projects-grid"></div>
+      <div id="category-grid" class="projects-grid" aria-live="polite"></div>
     </section>
 
+    <!-- Load data first, then main (which contains shared utilities), then run the renderer -->
+    <script src="scripts/projects-data.js"></script>
+    <script src="scripts/main.js"></script>
     <script>
-      // Embedded project data (generated from provided CSV)
-      const PROJECTS_DATA = [
-        {"row":1,"Project Name":"BSNL Silver Jubillee Short","Category":"Motion Graphics Design","Featured":"No","Tags":"Video editing\nMotion graphics\nAnimation","Time":"Sep, 2025","Duration":"4 Days","Team":"-","Project Brief":"For BSNL's 25th Year Anniversary, I got to create a short showing their legacy of 25 Years through a video celebrating/themed the tele evolution, from when messages were passed through pigeons to satellite communication","Hero image":"","Images":""},
-        {"row":2,"Project Name":"Social Alpha Year End Video","Category":"Motion Graphics Design","Featured":"No","Tags":"Video editing\nMotion graphics\nAnimation","Time":"Dec, 2023","Duration":"2 Weeks","Team":"-","Project Brief":"During my time at Social Alpha, I took the lead on creating the year end video, welcoming 2024 and saying goodbye to 2023","Hero image":"","Images":""},
-        {"row":3,"Project Name":"Social Alpha Newsletters","Category":"Graphic Design","Featured":"No","Tags":"Graphic Design\nCopywriting","Time":"Feb 2023 - Jun 2024","Duration":"1 Week per Month","Team":"-","Project Brief":"During my time at Social Alpha, I took the lead on designing the special editions of the monthly newsletter Work in progress, my fav being the March 2024 and June 2024 editions (https://www.socialalpha.org/newsletters) and co desined the unofficial newsletter Chai time with Shubha Subramaniam colleague, and every month I was writing the copy for the official newsletter\n\nCopywriting:\nJun 2023 - Feb 2024","Hero image":"","Images":""},
-        {"row":4,"Project Name":"Bee Centered Design","Category":"UI/UX Design","Featured":"Yes","Tags":"UX Research\nPackaging Design","Time":"Jan, 2021","Duration":"1 Week","Team":"-","Project Brief":"Most of India's information on pollinating insects is still insufficient to understand the state of bees in our country including their population, which begs the question of why and how they should be conserved. This project aims to change the outlook towards bees in the Indian context. Currently, many of us see them as pests, so through my product concept, I hope to make urban dwellers accustomed to the knowledge and existence of bees so they are not just tolerated but welcomed visitors to our gardens.","Hero image":"","Images":""},
-        {"row":5,"Project Name":"Imagining Future Interfaces","Category":"UI/UX Design","Featured":"No","Tags":"UX Research\nInteraction Design\n3D Prototyping\nVideo Editing","Time":"Dec, 2021","Duration":"2 Weeks","Team":"-","Project Brief":"The Yonder interactive public space project aims to turn learning into an adventure by immersing you in a world of sights, sounds, and cultural exploration. By leveraging proxemics theory, the project seeks to connect people with diverse cultures through interactive audiovisual interactions.","Hero image":"","Images":""},
-        {"row":6,"Project Name":"Beautiful Creatures","Category":"Storytelling","Featured":"No","Tags":"Sound Design\nImmersive Storytelling\nCreative Coding","Time":"Mar, 2020","Duration":"1 Week","Team":"-","Project Brief":"Dive into the rich narrative of one of my cherished fictional tales, 'Beautiful Creatures',allowing yourself to be transported to its vivid settings for an engaging and immersive reading experience.","Hero image":"","Images":""},
-        {"row":7,"Project Name":"Twinkle Twinkle Little Notes","Category":"Creative Computing","Featured":"No","Tags":"Creative Coding\nImmersive Learning\nGenerative Art","Time":"Apr, 2021","Duration":"2 Weeks","Team":"Kenneth Bhasme (Programming)\nNidhi Surekha (Programming)\nNayal Adithi (Documentation)","Project Brief":"This project is a thrilling journey of creativity, experimentation and innovation that brings rhymes to life for children with a preference for visual learning. Our goal is to use the magic of technology to transform musical notes into pixels. Pixels, the smallest unit of an image is what this project is based off of. The visuals engage and captivate young learners. With every note progression in the song, our visuals will evolve, creating a one-of-a-kind experience for each rhyme. For this project, we chose to work on the famous rhyme 'Twinkle Twinkle Little Star' as it motivates kids to aim for the skies. But that's not all - our project also acts as a unique learning tool for people who want to explore the world of music. By exploring the interplay between programming, experience design and experimental design, we crafted an experience that will leave a lasting impression. This project tries to go beyond traditional media and push the boundaries of what's possible.","Hero image":"","Images":""},
-        {"row":8,"Project Name":"Shy Guy","Category":"Creative Computing","Featured":"Yes","Tags":"Tangible Computing\nCreative Coding\nInteraction Design\nGenerative Art","Time":"Oct, 2019","Duration":"2 Weeks","Team":"Aditi Singh (Prototype Building)\nAnirudha Ghosh (Research & Testing)\nIshitha Chandra (Documentation)\nNidhi Surekha (Programming)\nVidushi (Prototype Building)","Project Brief":"Our aim is to blur the lines between man-made and machine-made art and make people question everything they know about creativity. Our goal is to create an interactive art piece that will make viewers go \"whoa!\" and \"huh?\" at the same time. We're talking about an installation that involves a computer program using any kind of medium from water to chalk dust, and everything in between to create artistic paintings. And the best part? The audience gets to be part of the creation process! They can interact with the installation in real-time, creating an unique experience and leaving their artistic mark on the piece. Who knew computers could be so creative, right?","Hero image":"","Images":""},
-  {"row":9,"Project Name":"Weather Moodwheel","Category":"Storytelling","Featured":"Yes","Tags":"3D Design\nImmersive Datavisualisation","Time":"Jul, 2024","Duration":"1 Week","Team":"-","Project Brief":"learn how to transform data into visually captivating narratives for immersive experiences. Using tools like Spline for 3D modeling\nProjects include visualizing the change in classmates’ moods depending on the weather through a 3D animated data experience.","Hero image":"","Images":""},
-        {"row":10,"Project Name":"Hunar Hive","Category":"Graphic Design","Featured":"Yes","Tags":"Branding\nGraphic Design","Time":"Jan, 2025","Duration":"2 Weeks","Team":"Praggya Bhattacharya (Business Model)\nNidhi Surekha (Brand Identity)","Project Brief":"","Hero image":"","Images":""},
-        {"row":11,"Project Name":"Fireworks Systems","Category":"UI/UX Design","Featured":"No","Tags":"Systems Design\nUX Research","Time":"Jul, 2024","Duration":"4 Weeks","Team":"Shivani Badgujar (Research focused in Pune)\nNidhi Surekha (Research focused in Bangalore)","Project Brief":"In the Systems Thinking course, students analyze and redesign complex systems, focusing on fireworks. They address the challenge of enjoying firecrackers while ensuring safety and awareness to prevent harm to people, animals, and the environment.\n\nProposed solutions include using sarcasm and humor in marketing materials to improve communication to consumers, creating a consolidated fireworks library, and developing AR/VR experiences to educate users on safety, pollution, and social impacts. Students also reimagine fireworks as biodegradable, organic materials with mechanisms inspired by seed dispersal biomimicry.\n\nAdditionally, they design packaging that uses sarcasm to highlight the harmful effects of fireworks on pets and wildlife, combining creativity with impactful messaging.","Hero image":"","Images":""},
-        {"row":12,"Project Name":"Kalpavriksh","Category":"XR Design","Featured":"No","Tags":"VR Experience\nEnvironment Building","Time":"Feb, 2025","Duration":"2 Weeks","Team":"Shivani Badgujar (Concept)\nNidhi Surekha (Programming)\nSagun Chatla (World building)","Project Brief":"Kalpavriksh is an interactive VR project where participants' professional goals and dreams take form as glowing energy, flowing into a living, evolving tree, inspired by Avatar’s Tree of Souls. Each aspiration aligns with the UN Sustainable Development Goals (SDGs), symbolizing the power of collective ambition.\n\nBy stepping into this immersive space, users witness how individual hopes merge into a shared ecosystem, fostering reflection, inspiration, and collaboration growing a tree of collective aspirations that push the world forward.","Hero image":"","Images":""},
-        {"row":13,"Project Name":"Muse and Melody","Category":"XR Design","Featured":"No","Tags":"VR Experience\nEnvironment Building","Time":"Jan, 2025","Duration":"4 Weeks","Team":"-","Project Brief":"Muse & Melody is a hauntingly beautiful immersive experience that explores the many facets of womanhood: the youthful, the passionate, and the nurturing. In this Virtual Reality Museum project, each sculpture comes to life with light & sound, creating a mesmerizing musical experience.\n\nMade for museum VR labs and cultural events, this project takes inspiration from Greek muses and looks at sacred femininity in an artistic way using tech.","Hero image":"","Images":""},
-  {"row":14,"Project Name":"Hasta Mudra","Category":"XR Design","Featured":"Yes","Tags":"VR Experience\nEnvironment Building\nModel Rigging","Time":"Feb, 2025","Duration":"4 Weeks","Team":"-","Project Brief":"Hasta Mudra combines classical culture and technology by reimagining Bharatanatyam's hand gestures (hasta mudras) through immersive digital mediums. Its virtual environment offers a multisensory platform where 13 asamyukta hastas (single hand gestures) turn into engaging audio-visual representations of their meaning or origin. For example, performing the “Chandrakala” gesture triggers a moon to rise in the night sky.\n\nBy technically mixing hand motion tracking with this creative medium, performing the dance gesture feels authentic.  For foreign audiences, Hasta Mudra creates a unique way to explore and appreciate Indian culture. It is also a way to keep traditions alive while updating them","Hero image":"","Images":""},
-        {"row":15,"Project Name":"Row Beyond","Category":"XR Design","Featured":"Yes","Tags":"VR Simulation\nEnvironment Building","Time":"Aug, 2025","Duration":"1 Day","Team":"Janice Carvalho (Concept & World Building)\nNidhi Surekha (Concept & Programming)\nSagun Chatla (Concept & Programming)\nSoumya Unhelkar (Concept & Documentation)","Project Brief":"Row Beyond combines real sports with tech, turning rowing practice into a virtual experience. It imitates actual water conditions, offers posture feedback, and provides endurance workouts, giving athletes and fitness fans a secure but lifelike method to improve. If you rotate your hand wrong or have bad posture, the system shows you how to fix it.\n\nBy mixing motion tracking, physics settings, and feedback for multiple senses, rowing becomes precise and fun. For rowers who can't easily get to calm open waters, Row Beyond is an easy-to-carry option that boosts their ability and opens up the sport to everyone.","Hero image":"","Images":""},
-        {"row":16,"Project Name":"Smart Shopping Cart","Category":"Creative Computing","Featured":"No","Tags":"Tangible Computing\nCreative Coding\nUI Design","Time":"Apr, 2025","Duration":"2 Weeks","Team":"Nidhi Surekha (Concept & Programming)\nJanice Carvalho (Concept & Model Training)","Project Brief":"The Smart Shopping Cart is a tangible computing project aimed at solving common problems we face when shopping, like long lines at checkout, billing mistakes, and confusing systems.\n\nThis cart uses a camera and AI to detect items, so it knows what you’re buying and keeps track of your total as you shop. There’s a screen that shows your running total, and you can pay using online systems, which means you don’t have to wait in line to check out. It also has a locking mechanism that keeps your stuff safe once it recognizes your items.\n\nLooking ahead, the plan is to add features like AR to display product info and deals, personalized shopping based on customer profiles, and data analysis to help stores improve layouts. By combining tech with a user-friendly design, the Smart Cart aims to make shopping quicker, safer, and more enjoyable.","Hero image":"","Images":""},
-  {"row":17,"Project Name":"Samsung Agentic AI","slug":"samsung-agentic-ai-interaction-17","Category":"UI/UX Design","Featured":"No","Tags":"Interaction Design\nUI Design\nUX Research","Time":"Jul, 2025","Duration":"5 Weeks","Team":"Himanshi Puri\nNidhi Surekha\nRachit Bhatnagar\nAkash Rawat","Project Brief":"Skye AI Agent is a smart, empathetic agent. For modern air travelers, Skye reimagines airport mobility using conversational AI, context awareness, and intuitive design. From flight landing to airport transport, Skye guides travelers with real-time updates, navigation help, and personalized assistance, making every step seamless and stress-free.\n\nActing as a calm and reliable co-pilot, it ensures travelers feel supported, informed, and at ease while navigating complex airport environments.","Hero image":"","Images":""},
-        {"row":18,"Project Name":"Lost in Transit","Category":"Storytelling","Featured":"No","Tags":"Script Writing\nPoster Design\nMotion Graphics\nTheatrical Play","Time":"Jul, 2024","Duration":"2 Weeks","Team":"Sagun Chatla (Play Act, Poster Design, Story Ideation)\nOmkar Shete (Play Act, Props, Story Ideation)\nShivani Badgujar (Play Act, Props, Story Ideation)\nNidhi Surekha (Narration, Script, Video Editing, Poster Design, Props)","Project Brief":"This course explores the fundamental principles of immersive media through practical exercises, emphasizing mindfulness, collaboration, and storytelling. In the \"Shadow Play Storytelling\" project, students meditate to reflect on their day, extract a significant word, and collaboratively craft a script in groups.\n\nThe stories come to life through shadow play, where students experiment with light, silhouettes, and motion to create immersive performances.","Hero image":"","Images":""},
-        {"row":19,"Project Name":"MITID Logo AR","Category":"XR Design","Featured":"No","Tags":"AR Experience","Time":"Sep, 2025","Duration":"1 Day","Team":"-","Project Brief":"An installation/Exhibit that could excite people to come experience the brand of MIT in a different way","Hero image":"","Images":""},
-  {"row":20,"Project Name":"Tribal Displacement","Category":"Motion Graphics Design","Featured":"Yes","Tags":"Motion graphics\nAnimation\nSound Design\nScripting\nVideo editing","Time":"Apr, 2025","Duration":"2 Weeks","Team":"-","Project Brief":"“Displaced Development” is a satirical piece using motion graphics and sound to explore the sad realities of tribal communities living in forests. It features a watercolor puppet animation style. The visuals embrace the charm of handmade flaws, with cutout puppetry to express both literal and deeper ideas, such as leaving home shown as a runaway marble. The watercolor is soft, but it clashes with the tough realities faced by Adivasis who are forced to give up their forests for factories.\n\nThe sound design mixes forest & city sounds with a sarcastic narration that feels personal yet jarring. The project wraps up with music from an Irula tribe member I met in Bandipur's forest back in 2019. With its layered storytelling, the project pushes viewers to think about the ridiculousness of development and the voices that often get ignored.","Hero image":"","Images":""},
-  {"row":21,"Project Name":"Nataka","Category":"Storytelling","Featured":"No","Tags":"Theatrical Play","Time":"Nov, 2019","Duration":"5 Weeks","Team":"Srishti Institute of Art, Design & Technology; National School of Drama","Project Brief":"Srishti Institute of Art, Design & Technology (now. Srishti Manipal) and the National School of Drama, Bangalore collaborated in 2019 on a multilingual Nataka performance with glimpses from Girish Karnad's plays Hayavadana, Agni Mattu Male, and Naga Mandala for the Karnad Utsav. The project aimed to showcase the diverse cultural and linguistic identities of India through theatre and performance art.\n\nC. Basavalingaiah directed the plays, which explored themes such as identity, desire, and power. The project involved intensive rehearsals, and set design, culminating in a series of public performances that highlighted the unique voices and perspectives of the actors and crew. The project aimed to foster collaboration and exchange between the institutions and inspire dialogue around the role of theatre and performance art in shaping cultural identity.","Hero image":"","Images":""},
-        {"row":22,"Project Name":"Tailors & Embroiderers","Category":"Storytelling","Featured":"No","Tags":"Video editing\nSound Design\nScripting","Time":"Jan, 2019","Duration":"3 Weeks","Team":"Nidhi Surekha (Capturing Shots)\nShraddha Sekhar (Capturing Sounds)\nTanvi Deodhar (Acting)\nTasneem Kachwala (Directing)\nVipra Bhargava (Capturing Shots)","Project Brief":"Are you ready for some lights, camera, action?! In this project, we explored the world of film-making and boy, did it take us on a wild ride! Starting from scratch, we had to come up with our own stories and bring them to life with sound and visuals. It was a learning curve, but we quickly discovered that inspiration can be found all around us - even in the most unlikely places. The film-making process bridged the gap between us and the local community as we captured the 'men at work', or should I say 'women at work'.","Hero image":"","Images":""},
-  {"row":23,"Project Name":"Reimagining Sculptures","slug":"classical-sculptures-reimagined-23","Category":"Storytelling","Featured":"No","Tags":"Sculpting","Time":"Apr, 2019","Duration":"3 Days","Team":"-","Project Brief":"Welcome to the world of sculpting for kids! The mission for this project is to transform dull, lifeless materials like clay, plaster, thermocol or wire mesh into fun and interactive toys that'll keep kids entertained for hours while building a connect with classical art and culture.\n\nI shall be taking inspiration from some of the greatest sculptures of all time, like the Nandi from my recent visit to the Lepakshi Temple of Andhra Pradesh and the Flying Horse of Gansu from China. I'm hoping to give them a kid-friendly twist, so get ready to sculpt your way into the hearts of children everywhere!","Hero image":"","Images":""},
-        {"row":24,"Project Name":"Identity Bloom","Category":"Creative Computing","Featured":"No","Tags":"Creative Coding","Time":"Oct, 2024","Duration":"1 Week","Team":"-","Project Brief":"Exploring one’s identity through art. The project uses one’s name and MBTI personality type to create a personalized, algorithmic visualization.\n\nOBJECTIVES\nExplore the intersection of art and identity\nVisualize the beauty of individuality through generative art\n\nKEY FEATURES\nPlatform: Web browser\nUser input: Participant's name & MBTI Personality type\nAlgorithmic artwork generation\nPersonalized, shareable visual representation","Hero image":"","Images":""},
-        {"row":25,"Project Name":"Coded Graphic Patterns","Category":"Creative Computing","Featured":"No","Tags":"Creative Coding\nGraphic Design","Time":"Feb, 2021","Duration":"1 Week","Team":"-","Project Brief":"Graphical Patterns Coded on p5js","Hero image":"","Images":""},
-        {"row":26,"Project Name":"Paul Janet Clock","Category":"Creative Computing","Featured":"No","Tags":"Creative Coding\nAnimation","Time":"Mar, 2021","Duration":"2 Weeks","Team":"-","Project Brief":"We all know how our perception of time changes as our life span increases. Most of us feel that time moved very slowly when we were younger and it gradually speeds up as we grow older. We usually become conscious of this speeding up when our lives become ordered into routines (routines make us lose sense of time).\n\nThis is exactly what Paul Janet's theory on time is about. Based on this theory, a 5 year old child feels a year as 1/5th of his/her whole life while a man of 30 feels a year as 1/30th of his whole life. Previously, he was known as Kal Kan, but to sell the product internationally, in 1988 it was renamed as Whiskas. The brand serves healthy, meat-based cat food and was the first brand to offer variety in pet food which made it popular.\n\nThe reason I chose to work on this particular brand is because it promises to keep my cat healthy. The trust I have in this brand, makes it one of my favourites. Previously, I had tried out a few products from competitor brands like Drools and Let's Bite, but my cat seemed to prefer this one.","Hero image":"","Images":""},
-        {"row":27,"Project Name":"Zathura Poster","Category":"Graphic Design","Featured":"No","Tags":"Graphic Design","Time":"Aug, 2024","Duration":"2 Days","Team":"-","Project Brief":"Redesigning my fav movie poster\nAstronaut - Outside looking in, trying to reach the gameboard (a hidden spoiler)\nKey - The Zathura gameboard key floating, signifying space, placed next to hidden spoiler representing a solution\nGameboard - Infinity loop in gameboard highlighted to hint at the the story’s relation to time\nCycle - To identify the room as a home with children\nBoys - Holding hands in struggle to signify them getting through obstacles together\nSpaceship and asteroids - To signify space and obstacles\nRobot - as a shadow behind the title to signify a hidden villian + protector in the story\nPurple colors denoting mystery and danger\nMultiple elements to signify chaotic adventure","Hero image":"","Images":""},
-        {"row":28,"Project Name":"IT's Trap","Category":"Creative Computing","Featured":"No","Tags":"Game Design","Time":"Dec, 2024","Duration":"2 Weeks","Team":"-","Project Brief":"Turning One of my fav horror movies into a maze game","Hero image":"","Images":""},
-        {"row":29,"Project Name":"Wiskas Brand Redesign","Category":"Graphic Design","Featured":"No","Tags":"Branding\nGraphic Design","Time":"Mar, 2021","Duration":"1 Week","Team":"-","Project Brief":"Whiskas is a brand of catfood sold internationally. It has been around for almost 80 years and counting. Whiskas is owned by Mars incorporated. Previously, it was known as Kal Kan, but to sell the product internationally, in 1988 it was renamed as Whiskas. The brand serves healthy, meat-based cat food and was the first brand to offer variety in pet food which made it popular.\nThe reason I chose to work on this particular brand is because it promises to keep my cat healthy. The trust I have in this brand, makes it one of my favourites. Previously, I had tried out a few products from competitor brands like Drools and Let's Bite, but my cat seemed to prefer this one.","Hero image":"","Images":""},
-        {"row":30,"Project Name":"NuWay Messaging App Design","Category":"UI/UX Design","Featured":"No","Tags":"UI Design","Time":"May, 2021","Duration":"4 Weeks","Team":"-","Project Brief":"Creating the UI Design for a Messaging App called NuWay, no UX Research involved","Hero image":"","Images":""},
-        {"row":31,"Project Name":"Fintech Website Design","Category":"UI/UX Design","Featured":"No","Tags":"UI Design","Time":"Jul, 2022","Duration":"1 Day","Team":"-","Project Brief":"Creating the UI Design for a Fintech Website, no UX Research involved","Hero image":"","Images":""},
-        {"row":32,"Project Name":"Abhyas Website Design","Category":"UI/UX Design","Featured":"No","Tags":"UI Design","Time":"Apr, 2021","Duration":"1 Week","Team":"-","Project Brief":"Creating the UI Design for a Yoga Brand called Abhyas, no UX Research involved","Hero image":"","Images":""},
-  {"row":33,"Project Name":"Festiveza App Design","Category":"UI/UX Design","Featured":"No","Tags":"UI Design","Time":"Apr, 2021","Duration":"4 Weeks","Team":"Aishwarya Ashtkar\nNidhi Surekha","Project Brief":"Creating the UI Design for an Event Planning app called Festiveza, no UX Research involved","Hero image":"","Images":""}
-      ];
+      // Renderer that consumes window.PROJECTS_DATA
+      (function(){
+        const PROJECTS = window.PROJECTS_DATA || [];
 
-      function slugify(name){ return name.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,''); }
+        function slugify(name){ return String(name||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,''); }
 
-      function createCard(p){
-        const a = document.createElement('a');
-        a.className = 'card-link';
-        a.setAttribute('role','link');
-        a.setAttribute('aria-label', p['Project Name']);
-        a.setAttribute('tabindex','0');
-  const slug = (p.slug && p.slug.toString().trim()) ? p.slug.toString().trim() : (slugify(p['Project Name']) + '-' + p.row);
-  a.href = 'projects/' + slug + '.html';
-        const article = document.createElement('article'); article.className='card';
-        const img = document.createElement('img'); img.src='assets/project1.svg'; img.alt=p['Project Name'];
-        const body = document.createElement('div'); body.className='card-body';
-        const h3 = document.createElement('h3'); h3.textContent = p['Project Name'];
-  // Tags (show as pills) — tags are newline/comma separated in the CSV
-  const tagsRaw = p['Tags'] || '';
-  const tagList = tagsRaw.split(/\n|,/).map(t=>t.trim()).filter(Boolean);
-  const tagsWrap = document.createElement('div'); tagsWrap.className='tag-list';
-  tagList.forEach(t=>{ const s = document.createElement('span'); s.className='tag-pill'; s.textContent = t; tagsWrap.appendChild(s); });
-
-  // Determine Individual vs Group
-  // Priority: use the CSV 'Team' column if present. If Team === '-' => Individual, otherwise Group.
-  // Fallback: previous heuristic based on tag tokens that look like person names.
-  let metaType = 'Individual';
-  if(typeof p['Team'] !== 'undefined'){
-    const teamVal = (p['Team']||'').toString().trim();
-    if(teamVal === '-' || teamVal === '') metaType = 'Individual'; else metaType = 'Group';
-  } else {
-    const nameLike = tagList.filter(tok=> /^([A-Z][a-z]+)(\s+[A-Z][a-z]+)+$/.test(tok));
-    metaType = (nameLike.length > 1) ? 'Group' : 'Individual';
-  }
-  const duration = (p['Duration'] && p['Duration'].trim() && p['Duration'].trim() !== '-') ? p['Duration'].trim() : (p['Time']||'');
-  const metaLine = document.createElement('div'); metaLine.className='project-meta';
-  metaLine.textContent = duration ? (metaType + ' · ' + duration) : metaType;
-
-  body.appendChild(h3);
-  if(tagList.length>0) body.appendChild(tagsWrap);
-  body.appendChild(metaLine);
-        article.appendChild(img); article.appendChild(body); a.appendChild(article);
-        // After card is created, return it. Caller should append and then call adjustTagOverflow(container)
-        return a;
-      }
-
-      // collapse overflowed tags into a +N pill and show remaining in a popover
-      function adjustTagOverflow(container){
-        const tagsWrap = container.querySelector('.tag-list');
-        if(!tagsWrap) return;
-        // reset
-        Array.from(tagsWrap.querySelectorAll('.tag-pill.tag-plus')).forEach(e=>e.remove());
-        const pills = Array.from(tagsWrap.querySelectorAll('.tag-pill'));
-        if(pills.length===0) return;
-
-        const wrapWidth = tagsWrap.clientWidth;
-        const marginRight = (idx)=> {
-          const style = getComputedStyle(pills[idx]);
-          const mr = parseFloat(style.marginRight) || 0; return mr;
-        };
-
-        // gather widths for accurate decisions
-        const widths = pills.map((p,i)=> p.offsetWidth + marginRight(i));
-
-        // find how many pills fit without the +N
-        let used = 0; let lastIndex = -1;
-        for(let i=0;i<widths.length;i++){
-          if(used + widths[i] > wrapWidth){ lastIndex = i-1; break; }
-          used += widths[i];
-          lastIndex = i;
-        }
-        if(lastIndex >= pills.length -1) return; // all fit
-
-        let extra = pills.length - (lastIndex+1);
-
-        // compute plus width and ensure it fits; if not, move more pills into extra
-        const makePlusText = (n)=>'+' + n;
-        const tmp = document.createElement('span'); tmp.className='tag-pill tag-plus'; tmp.style.visibility='hidden'; tmp.style.position='absolute'; tmp.style.pointerEvents='none'; document.body.appendChild(tmp);
-        let plusWidth = 0;
-        while(true){
-          tmp.textContent = makePlusText(extra);
-          plusWidth = tmp.offsetWidth + (parseFloat(getComputedStyle(tmp).marginRight)||0);
-          if(used + plusWidth <= wrapWidth) break;
-          // need to move one more visible pill into extras
-          if(lastIndex < 0) break;
-          used -= widths[lastIndex];
-          lastIndex -= 1;
-          extra = pills.length - (lastIndex+1);
-        }
-        tmp.remove();
-
-        // remove extra pills from DOM
-        for(let i=pills.length-1;i>lastIndex;i--) pills[i].remove();
-
-        // create accessible +N button
-        const plus = document.createElement('button'); plus.className='tag-pill tag-plus'; plus.type='button'; plus.setAttribute('aria-expanded','false'); plus.setAttribute('aria-haspopup','dialog'); plus.textContent = makePlusText(extra);
-        const remaining = pills.slice(lastIndex+1).map(p=>p.textContent).join(', ');
-        tagsWrap.appendChild(plus);
-
-        // popover element (created lazily when needed)
-        function openPopover(){
-          closePopover();
-          const pop = document.createElement('div'); pop.className = 'tag-popover'; pop.setAttribute('role','dialog'); pop.setAttribute('aria-label','Additional tags');
-          const list = document.createElement('div'); list.className='tag-popover-list';
-          // render remaining tags as pills inside the popover for clarity
-          remaining.split(', ').forEach(t=>{ const p = document.createElement('span'); p.className='tag-pill'; p.textContent = t; p.style.margin = '0 0 6px 0'; list.appendChild(p); });
-          pop.appendChild(list);
-          document.body.appendChild(pop);
-          const r = plus.getBoundingClientRect();
-          // position below, centered to the plus pill
-          const left = Math.min(window.innerWidth - 12 - pop.offsetWidth, Math.max(12, r.left + (r.width/2) - (pop.offsetWidth/2)));
-          pop.style.left = left + 'px';
-          pop.style.top = (r.bottom + 8) + 'px';
-          plus.setAttribute('aria-expanded','true');
-
-          function outside(e){ if(!pop.contains(e.target) && e.target !== plus){ closePopover(); } }
-          function esc(e){ if(e.key === 'Escape') closePopover(); }
-          setTimeout(()=>{ document.addEventListener('click', outside); document.addEventListener('keydown', esc); }, 0);
-          plus._popoverCleanup = ()=>{ document.removeEventListener('click', outside); document.removeEventListener('keydown', esc); };
+        function createCard(p){
+          const a = document.createElement('a'); a.className='card-link'; a.setAttribute('role','link'); a.setAttribute('aria-label', p['Project Name']); a.setAttribute('tabindex','0');
+          const slug = (p.slug && String(p.slug).trim()) ? String(p.slug).trim() : (slugify(p['Project Name']) + '-' + (p.row||''));
+          a.href = 'projects/' + slug + '.html';
+          const article = document.createElement('article'); article.className='card';
+          const img = document.createElement('img'); img.src='assets/project1.svg'; img.alt=p['Project Name'];
+          const body = document.createElement('div'); body.className='card-body';
+          const h3 = document.createElement('h3'); h3.textContent = p['Project Name'];
+          const tagsRaw = p['Tags'] || '';
+          const tagList = String(tagsRaw).split(/\n|,/).map(t=>t.trim()).filter(Boolean);
+          const tagsWrap = document.createElement('div'); tagsWrap.className='tag-list';
+          tagList.forEach(t=>{ const s = document.createElement('span'); s.className='tag-pill'; s.textContent = t; tagsWrap.appendChild(s); });
+          const duration = (p['Duration'] && String(p['Duration']).trim() && String(p['Duration']).trim() !== '-') ? String(p['Duration']).trim() : (p['Time']||'');
+          const metaLine = document.createElement('div'); metaLine.className='project-meta'; metaLine.textContent = duration ? ('Individual · ' + duration) : 'Individual';
+          body.appendChild(h3); if(tagList.length>0) body.appendChild(tagsWrap); body.appendChild(metaLine);
+          article.appendChild(img); article.appendChild(body); a.appendChild(article); return a;
         }
 
-        function closePopover(){
-          const existing = document.querySelector('.tag-popover'); if(existing) existing.remove();
-          Array.from(document.querySelectorAll('.tag-plus[aria-expanded]')).forEach(b=>b.setAttribute('aria-expanded','false'));
-          if(plus && plus._popoverCleanup) { try{ plus._popoverCleanup(); }catch(e){} plus._popoverCleanup = null; }
-        }
-
-        plus.addEventListener('click',(e)=>{ if(plus.getAttribute('aria-expanded') === 'true'){ closePopover(); } else openPopover(); });
-        plus.addEventListener('keydown',(e)=>{ if(e.key === 'ArrowDown' || e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openPopover(); } });
-      }
-
-  // Note: Featured projects are shown when the 'Featured' chip is selected.
-  // We no longer render a separate Featured section above the chips.
-
-      // preferred category order per user
-      const PREFERRED_CATEGORIES = [
-        'Featured',
-        'Graphic Design',
-        'UI/UX Design',
-        'XR Design',
-        'Motion Graphics Design',
-        'Creative Computing',
-        'Storytelling'
-      ];
-
-      const chipsBar = document.getElementById('category-chips');
-      const categoryGrid = document.getElementById('category-grid');
-
-      function clearActiveChips(){ Array.from(chipsBar.querySelectorAll('.chip')).forEach(c=>c.classList.remove('chip--active')) }
-
-      function setCategoryInURL(name){
-        try{ const url = new URL(window.location.href); url.searchParams.set('category', name); window.history.replaceState(null,'', url.toString()); }
-        catch(e){ /* ignore */ }
-      }
-
-      function getCategoryFromURL(){ const params = new URLSearchParams(window.location.search); return params.get('category'); }
-
-
-      function renderChip(name){
-        const btn = document.createElement('button');
-        btn.className='chip';
-        btn.type='button';
-        btn.textContent = name;
-        btn.setAttribute('aria-pressed','false');
-        btn.addEventListener('click', ()=>{
-          clearActiveChips(); btn.classList.add('chip--active'); btn.setAttribute('aria-pressed','true');
-          // render projects for this category
-          categoryGrid.innerHTML='';
-          // update URL so the current category is shareable
-          setCategoryInURL(name);
-          if(name === 'Featured'){
-            const list = PROJECTS_DATA.filter(x=> (x.Featured||'').toLowerCase().trim()==='yes');
-              if(list.length===0){ categoryGrid.innerHTML='<div style="color:#777">No featured projects yet.</div>'; return; }
-              // append all cards first, then measure/adjust tag overflow after layout
-              list.forEach(p=>{ const card = createCard(p); categoryGrid.appendChild(card); });
-              requestAnimationFrame(()=>{
-                Array.from(categoryGrid.querySelectorAll('.card-link')).forEach(card=> adjustTagOverflow(card));
-              });
-            return;
-          }
-          // Include featured projects in their category lists as well (user requested)
-          const list = PROJECTS_DATA.filter(x=> (x.Category||'').trim() === name);
-          if(list.length===0){ categoryGrid.innerHTML='<div style="color:#777">No projects in this category yet.</div>'; return; }
-          // append all cards first, then measure/adjust tag overflow after layout
-          list.forEach(p=>{ const card = createCard(p); categoryGrid.appendChild(card); });
-          requestAnimationFrame(()=>{
-            Array.from(categoryGrid.querySelectorAll('.card-link')).forEach(card=> adjustTagOverflow(card));
+        function adjustTagOverflow(container){
+          const tagsWrap = container.querySelector('.tag-list'); if(!tagsWrap) return;
+          const pills = Array.from(tagsWrap.querySelectorAll('.tag-pill'));
+          if(pills.length <= 4) return;
+          const extra = pills.length - 4;
+          for(let i=pills.length-1;i>=4;i--) pills[i].remove();
+          const plus = document.createElement('button'); plus.className='tag-pill tag-plus'; plus.type='button'; plus.textContent = '+' + extra;
+          plus.addEventListener('click', ()=>{
+            // show a simple alert-style overlay listing tags (accessible fallback)
+            const list = pills.map(p=>p.textContent).join(', ');
+            alert(list);
           });
-        });
-        return btn;
-      }
+          tagsWrap.appendChild(plus);
+        }
 
-      // create chips in preferred order, fallback include any others after
-      const known = new Set(PROJECTS_DATA.map(x=> (x.Category||'').trim()).filter(Boolean));
-      PREFERRED_CATEGORIES.forEach(cat=>{ chipsBar.appendChild(renderChip(cat)); if(known.has(cat)) known.delete(cat); });
-      // append remaining categories (if any) after preferred
-      Array.from(known).sort().forEach(cat=> chipsBar.appendChild(renderChip(cat)));
+        function clearActiveChips(){ Array.from(chipsBar.querySelectorAll('.chip')).forEach(c=>c.classList.remove('chip--active')); }
+        function setCategoryInURL(name){ try{ const url = new URL(window.location.href); url.searchParams.set('category', name); window.history.replaceState(null,'', url.toString()); } catch(e){} }
+        function getCategoryFromURL(){ const params = new URLSearchParams(window.location.search); return params.get('category'); }
 
-      // make first chip active by default (Featured) or pick up from URL
-      const firstChip = chipsBar.querySelector('.chip');
-      const initial = getCategoryFromURL();
-      if(initial){
-        // find a chip matching the param and click it
-        const match = Array.from(chipsBar.querySelectorAll('.chip')).find(b=> b.textContent === initial);
-        if(match){ match.click(); }
-        else if(firstChip){ firstChip.click(); }
-      } else { if(firstChip){ firstChip.click(); } }
+        function renderChip(name){
+          const btn = document.createElement('button');
+          btn.className='chip';
+          btn.type='button';
+          btn.textContent = name;
+          btn.setAttribute('aria-pressed','false');
+          btn.addEventListener('click', ()=>{
+            clearActiveChips(); btn.classList.add('chip--active'); btn.setAttribute('aria-pressed','true');
+            // render projects for this category
+            categoryGrid.innerHTML='';
+            // update URL so the current category is shareable
+            setCategoryInURL(name);
+            if(name === 'Featured'){
+              const list = PROJECTS.filter(x=> (String(x.Featured||'').toLowerCase().trim()) === 'yes');
+              if(list.length===0){ categoryGrid.innerHTML='<div style="color:#777">No featured projects yet.</div>'; return; }
+              list.forEach(p=>{ const card = createCard(p); categoryGrid.appendChild(card); });
+              requestAnimationFrame(()=>{ Array.from(categoryGrid.querySelectorAll('.card-link')).forEach(card=> adjustTagOverflow(card)); });
+              return;
+            }
+            const list = PROJECTS.filter(x=> String(x.Category||'').trim() === name);
+            if(list.length===0){ categoryGrid.innerHTML='<div style="color:#777">No projects in this category yet.</div>'; return; }
+            list.forEach(p=>{ const card = createCard(p); categoryGrid.appendChild(card); });
+            requestAnimationFrame(()=>{ Array.from(categoryGrid.querySelectorAll('.card-link')).forEach(card=> adjustTagOverflow(card)); });
+          });
+          return btn;
+        }
 
-      // Share UI removed — permalinks are still reflected in the URL when a chip is selected
+        // bootstrap: build category chips and render initial selection
+        const chipsBar = document.getElementById('category-chips');
+        const categoryGrid = document.getElementById('category-grid');
+
+        // compute categories with Featured first
+        const categories = Array.from(new Set(PROJECTS.map(p=> (p.Category||'').trim()).filter(Boolean)) ).sort();
+        categories.unshift('Featured');
+
+        categories.forEach(cat => { chipsBar.appendChild(renderChip(cat)); });
+
+        // activate category from URL or default to first
+        const initial = getCategoryFromURL() || 'Featured';
+        const initialBtn = Array.from(chipsBar.children).find(b => b.textContent === initial) || chipsBar.firstElementChild;
+        if(initialBtn){ initialBtn.click(); }
+
+      })();
     </script>
   </main>
-
-  <script src="scripts/main.js"></script>
 </body>
 </html>

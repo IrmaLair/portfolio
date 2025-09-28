@@ -498,14 +498,12 @@ body.centered-page h2, body.centered-page h3, body.centered-page h4{font-size:ca
 
 .marquee-track{display:flex;gap:12px;align-items:center}
 .marquee-item{flex:0 0 auto}
-.marquee-track{display:flex;gap:12px;align-items:center;will-change:transform}
+.marquee-track{display:flex;gap:12px;align-items:center;will-change:scroll-position}
 .marquee-item{flex:0 0 auto}
 .marquee-item img{height:160px;width:auto;display:block;border-radius:8px;object-fit:cover;box-shadow:0 10px 28px rgba(11,23,32,0.08)}
 
-/* animation: move the duplicated track left by 50% for a continuous loop */
-:root{--marquee-duration:18s}
-.marquee-track{animation:marquee var(--marquee-duration) linear infinite; will-change:transform}
-@keyframes marquee{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+/* marquee now scrolls via JS (requestAnimationFrame). Removed CSS keyframe animation to avoid conflicts.
+  Keep item sizing and overflow behaviour; images sized below. */
 
 /* marquee arrow controls */
 .marquee-item img{height:160px}
