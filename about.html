@@ -7,7 +7,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Kalam:wght@300;400;700&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles/main.css">
 </head>
-<body>
+<body class="centered-page">
   <!-- Splash overlay (shows before JS hydrates) -->
   <div class="splash-overlay" id="splash-overlay">
     <div class="splash-inner"><img class="splash-logo" src="assets/Logo.svg" alt="logo"></div>
@@ -18,18 +18,122 @@
     <a href="index.html" class="page-logo" aria-label="Home">
       <img src="assets/Logo.svg" alt="Home" width="48" height="48">
     </a>
-  <!-- background audio removed (shared bg audio lives on homepage) -->
-    <h1 class="handwriting">About</h1>
-    <p class="lead">I’m a designer and developer blending visual design with front-end code to ship thoughtful digital products. I focus on user research, accessible UI, and clean development.</p>
+    <h1 class="handwriting" aria-hidden="true" style="visibility:hidden;margin-bottom:1.25rem">About</h1>
 
-    <h2 style="margin-top:1.6rem">Skills</h2>
-    <ul>
-      <li>Product Design</li>
-      <li>UI/UX</li>
-      <li>Frontend (HTML/CSS/JS)</li>
-    </ul>
+    <div class="about-top">
+      <div class="profile-wrap">
+        <img src="assets/about me.png" alt="Nidhi Surekha" class="profile-pic">
+        <img src="assets/shell-star.svg" alt="sticker" class="sticker sticker--tl" aria-hidden="true">
+        <img src="assets/cat-sticker.png" alt="sticker" class="sticker sticker--br" aria-hidden="true">
+      </div>
+      <div class="intro">
+        <p style="font-size:18px;line-height:1.6;color:#303030;">Okay, so you clicked About, huh? Let's make this worth your time.</p>
+        <p class="intro-handwriting" style="margin-top:10px;font-weight:700;">Hey 👋</p>
+        <p class="intro-handwriting" style="margin-top:6px;font-weight:700;">I'm Nidhi!</p>
+
+  <p style="margin-top:12px;color:#303030;">I'm a designer who's into mixing stories, tech, and problem-solving to make experiences people actually like.</p>
+  <p style="margin-top:12px;color:#303030;">Right now, I'm getting my Master's in Immersive Media Design. I play around with VR/AR while thinking about the big picture. I've got a background in doing UX research, and using tech in cool ways. That lets me design experiences that work well, but also feel enjoyable.</p>
+      </div>
+    </div>
+
+    <div class="about-body" style="margin-top:1.25rem;max-width:760px;margin-left:auto;margin-right:auto;">
+  <p style="margin-top:12px;color:#303030;">Over the last few years, I've picked up skills with Adobe Creative Suite, Unreal Engine, Unity, Blender, making prototypes, and talking to users. I've done everything from making VR setups to tell stories about culture, to making brand plans and figuring out product designs.</p>
+
+  <!-- continuous gallery -->
+  <div class="about-gallery" aria-hidden="false">
+    <div class="marquee" aria-hidden="true">
+      <div class="marquee-track" role="list">
+        <!-- images inserted by JS for maintainability -->
+      </div>
+    </div>
+  </div>
+  <p style="margin-top:12px;color:#303030;">When I'm not working, I’m super curious about how design from India can inspire the world. You can usually find me trying out new AI tools, figuring out how things work, or getting people to follow a plan to reach a goal.</p>
+
+  <p class="about-cta" style="margin-top:18px;font-size:22px;font-weight:700;color:#303030;">If you want to work with me, hire me, or just chat, <a href="contact.html">hit me up!</a></p>
+    </div>
   </main>
 
   <script src="scripts/main.js"></script>
+  <script>
+    (function(){
+      // progressive: if user prefers reduced motion, don't animate
+      const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const galleryPath = 'assets/about-gallery/';
+      const images = [
+        'althahand.jpg',
+        'birddive.jpeg',
+        'bullying.png',
+        'butterflies.jpg',
+        'coexistence.png',
+        'coralclay.jpg',
+        'digital painting.jpg',
+        'doll.jpg',
+        'fishclay.jpg',
+        'ganapati.jpg',
+        'gloom.jpeg',
+        'green.jpg',
+        'kathakali.png',
+        'lilostitch.jpg',
+        'look to observe.jpg',
+        'love.jpg',
+        'lovebirds.jpg',
+        'luck.jpg',
+        'mango.jpg',
+        'nostairs.jpg',
+        'NSD.jpg',
+        'octopuss.jpg',
+        'pacmanclay.jpg',
+        'palm.jpg',
+        'Patterns.jpg',
+        'reflections.jpg',
+        'rose.jpeg',
+        'SOUL.png',
+        'splayedcat.jpg',
+        'sun1.jpg',
+        'sun2.jpg',
+        'sun3.jpg',
+        'triplets.jpg',
+        'tropical.jpeg',
+        'type 1 font.png',
+        'wilhelmina.jpg',
+        'windchime.jpg',
+        'wish.jpg'
+      ];
+      const track = document.querySelector('.marquee-track');
+      if(!track) return;
+
+      // helper to create img nodes
+      function makeItems(){
+        const fragment = document.createDocumentFragment();
+        images.forEach(name=>{
+          const item = document.createElement('div'); item.className='marquee-item';
+          const img = document.createElement('img');
+          img.src = encodeURI(galleryPath + name);
+          img.alt = name.replace(/\.[^.]+$/,'').replace(/[-_]/g,' ').trim();
+          img.loading = 'lazy';
+          item.appendChild(img);
+          fragment.appendChild(item);
+        });
+        return fragment;
+      }
+
+      // Populate a single sequential list of images so users can manually scroll.
+      track.appendChild(makeItems());
+
+      // basic accessibility: allow keyboard arrow scrolling when focus is on the marquee
+      const marqueeWrap = document.querySelector('.about-gallery .marquee');
+      marqueeWrap.tabIndex = 0; // make it focusable
+      marqueeWrap.addEventListener('keydown', (e)=>{
+        const step = 160; // pixels per arrow press
+        if(e.key === 'ArrowRight'){
+          marqueeWrap.scrollBy({ left: step, behavior: 'smooth' });
+          e.preventDefault();
+        } else if(e.key === 'ArrowLeft'){
+          marqueeWrap.scrollBy({ left: -step, behavior: 'smooth' });
+          e.preventDefault();
+        }
+      });
+      })();
+  </script>
 </body>
 </html>
