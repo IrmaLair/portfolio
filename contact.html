@@ -5,30 +5,71 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Contact — Nidhi Surekha</title>
   <link href="https://fonts.googleapis.com/css2?family=Kalam:wght@300;400;700&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+  <!-- Material Symbols (Outlined) for icons -->
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@48,400,0,0" rel="stylesheet" />
   <link rel="stylesheet" href="styles/main.css">
 </head>
-<body>
+<body class="centered-page">
   <!-- Splash overlay (shows before JS hydrates) -->
   <div class="splash-overlay" id="splash-overlay">
     <div class="splash-inner"><img class="splash-logo" src="assets/Logo.svg" alt="logo"></div>
   </div>
   <!-- sand texture background (shared with homepage) -->
   <div class="sand-overlay" aria-hidden="true"></div>
-  <main class="container" style="padding:3rem 2rem;">
+  <main class="container" style="padding:1.5rem 2rem;">
     <a href="index.html" class="page-logo" aria-label="Home">
       <img src="assets/Logo.svg" alt="Home" width="48" height="48">
     </a>
-  <!-- background audio removed (shared bg audio lives on homepage) -->
-    <h1 class="handwriting">Contact</h1>
-    <p class="lead">Available for freelance and full-time roles. Email: <a href="mailto:nidhi@example.com">nidhi@example.com</a></p>
+  <h1 class="handwriting" aria-hidden="true" style="margin-bottom:1.6rem;visibility:hidden;">Contact</h1>
 
-    <form style="margin-top:1.6rem;max-width:600px;">
-      <label style="display:block;margin-bottom:.5rem">Your email</label>
-      <input type="email" placeholder="you@example.com" style="width:100%;padding:.6rem;border:1px solid #e6e6e6;border-radius:8px;margin-bottom:1rem;">
-      <label style="display:block;margin-bottom:.5rem">Message</label>
-      <textarea rows="6" style="width:100%;padding:.6rem;border:1px solid #e6e6e6;border-radius:8px;margin-bottom:1rem;"></textarea>
-      <button type="submit" class="btn">Send</button>
-    </form>
+  <div class="contact-grid">
+      <!-- Left: Contact form -->
+      <section>
+  <h2 class="handwriting-sub" style="margin:0 0 10px 0;text-align:left">Say Hello!</h2>
+        <p style="font-size:20px;margin-top:6px;">Want to chat?<br>Leave me a message and I'll get back to you soon.</p>
+
+        <form class="contact-form" action="https://formsubmit.co/nidhi4surekha@gmail.com" method="POST">
+          <!-- Hidden fields for FormSubmit and spam protection -->
+          <input type="hidden" name="_subject" value="New message from Portfolio website accessor">
+          <input type="hidden" name="source" value="Portfolio website accessor">
+          <input type="hidden" name="_captcha" value="true">
+          <!-- honeypot (should remain empty) -->
+          <input type="text" name="_honey" style="display:none!important;visibility:hidden;position:absolute;left:-9999px;top:auto;" autocomplete="off">
+          <div class="row">
+            <input type="text" name="first" placeholder="First Name">
+            <input type="text" name="last" placeholder="Last Name">
+          </div>
+          <input type="email" name="email" id="contact-email" placeholder="Email" required>
+          <div id="contact-email-error" class="contact-error" aria-live="polite" style="display:none;">Please enter a valid email address.</div>
+          <input type="text" name="subject" placeholder="Subject">
+          <textarea name="message" rows="6" placeholder="Type your message here..."></textarea>
+          <button type="submit" class="btn">Submit</button>
+          <div id="contact-status" role="status" aria-live="polite" style="margin-top:12px;color:var(--muted);"></div>
+        </form>
+      </section>
+
+      <!-- Right: Contact details -->
+      <aside style="background:rgba(255,255,255,0.9);padding:1rem;border-radius:10px;text-align:left;">
+  <p style="margin:6px 0"><span class="material-symbols-outlined" aria-hidden="true">location_on</span> Bangalore, India</p>
+  <p style="margin:6px 0"><span class="material-symbols-outlined" aria-hidden="true">phone</span> +91 8123524060</p>
+  <p style="margin:6px 0"><span class="material-symbols-outlined" aria-hidden="true">email</span> <a href="mailto:nidhi4surekha@gmail.com">nidhi4surekha@gmail.com</a></p>
+
+  <p style="margin-top:40px;font-weight:600">Let's work together :)</p>
+  <p style="margin:6px 0;display:flex;gap:26px;align-items:center">
+          <a href="https://www.linkedin.com/in/nidhi-surekha" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn">
+            <img src="assets/Linkedin icon.svg" alt="LinkedIn" class="contact-icon">
+          </a>
+          <a href="https://wa.me/918123524060" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp">
+            <img src="assets/Whatsapp icon.svg" alt="WhatsApp" class="contact-icon">
+          </a>
+        </p>
+
+        <!-- Google Map moved into the right aside -->
+    <div style="margin-top:48px;">
+          <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3890.0000000000005!2d77.63000000000001!3d12.912800000000001!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3bae165000000001%3A0x0000000000000000!2sHSR%20Layout%2C%20Bengaluru%2C%20Karnataka%20560034!5e0!3m2!1sen!2sin!4v0000000000000" width="100%" height="220" style="border:0;border-radius:10px;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+        </div>
+      </aside>
+    </div>
   </main>
 
   <script src="scripts/main.js"></script>
