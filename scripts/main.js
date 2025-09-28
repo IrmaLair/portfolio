@@ -437,6 +437,95 @@ function attachShellHandlers(root = document) {
   });
 }
 
+// Contact form AJAX submit to FormSubmit.co (falls back to normal POST if fetch fails)
+function attachContactHandler(root = document) {
+  try {
+    const form = (root || document).querySelector('.contact-form');
+    if (!form) return;
+    if (form.dataset.__contactAttached) return; // avoid double attach
+    form.dataset.__contactAttached = '1';
+
+    const statusEl = document.getElementById('contact-status');
+
+    // Email validation helper
+    function isValidEmail(value) {
+      if (!value || typeof value !== 'string') return false;
+      // simple but effective regex for common email formats
+      const re = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/i;
+      return re.test(value.trim());
+    }
+
+    // real-time validation on the email input
+    const emailInput = form.querySelector('input[name="email"], input#contact-email');
+    const emailErrorEl = document.getElementById('contact-email-error');
+    if (emailInput) {
+      emailInput.addEventListener('input', () => {
+        const ok = isValidEmail(emailInput.value);
+        emailInput.classList.toggle('invalid', !ok && emailInput.value.length > 0);
+        if (emailErrorEl) emailErrorEl.style.display = (!ok && emailInput.value.length > 0) ? 'block' : 'none';
+      }, { passive:true });
+    }
+
+    form.addEventListener('submit', async (ev) => {
+      ev.preventDefault();
+
+      // Validate email before proceeding
+      if (emailInput) {
+        const ok = isValidEmail(emailInput.value);
+        if (!ok) {
+          emailInput.classList.add('invalid');
+          if (emailErrorEl) { emailErrorEl.style.display = 'block'; emailErrorEl.textContent = 'Please enter a valid email address.'; }
+          emailInput.focus();
+          return; // stop submission
+        } else {
+          emailInput.classList.remove('invalid');
+          if (emailErrorEl) { emailErrorEl.style.display = 'none'; }
+        }
+      }
+
+      if (statusEl) { statusEl.textContent = 'Sending…'; }
+
+      // Basic honeypot check
+      const honey = form.querySelector('[name="_honey"]');
+      if (honey && honey.value) {
+        if (statusEl) statusEl.textContent = 'Submission blocked.';
+        return;
+      }
+
+      const data = new FormData(form);
+      // Ensure source field exists for clarity in the email body
+      if (!data.get('source')) data.append('source', 'Portfolio website accessor');
+
+      // POST to the form action (FormSubmit endpoint)
+      const action = form.getAttribute('action') || window.location.href;
+      try {
+        const res = await fetch(action, { method: 'POST', body: data, headers: { 'Accept': 'application/json' } });
+        if (res.ok) {
+          if (statusEl) statusEl.textContent = 'Thanks — your message was sent.';
+          form.reset();
+        } else {
+          // Some form providers redirect; if JSON response indicates error, fallback to success message with note
+          try { const json = await res.json(); if (json && json.success) { if (statusEl) statusEl.textContent = 'Thanks — your message was sent.'; form.reset(); return; } } catch(e){}
+          if (statusEl) statusEl.textContent = 'There was a problem sending your message. Please try again later.';
+        }
+      } catch (err) {
+        // If fetch fails (CORS, offline), fallback to normal form POST navigation
+        if (statusEl) statusEl.textContent = 'Network error — trying fallback submit.';
+        // Create a hidden iframe to submit without leaving the page (non-blocking)
+        const iframe = document.createElement('iframe'); iframe.name = 'fs-iframe'; iframe.style.display = 'none'; document.body.appendChild(iframe);
+        const oldTarget = form.target;
+        form.target = 'fs-iframe';
+        form.submit();
+        form.target = oldTarget || '';
+        setTimeout(() => { if (statusEl) statusEl.textContent = 'If you do not receive a confirmation, please email nidhi4surekha@gmail.com directly.'; }, 1200);
+      }
+    });
+  } catch (e) { console.error('attachContactHandler failed', e); }
+}
+
+// run contact attach on initial load and after PJAX-like replacements
+attachContactHandler(document);
+
 // Initialize shell handlers on load
 attachShellHandlers(document);
 
@@ -733,3 +822,20 @@ window.addEventListener('content:replace', (ev) => {
     // Update footer for current page (projects) after PJAX swap
     try { updateFooterForCurrentPage(); } catch(e){}
 });
+
+  // Ensure interior pages that may not include the overlay element still show the sand texture
+  // and that any `.shell-btn` elements are attached. This is idempotent and safe to run on every page.
+  (function ensureOverlayAndShells(){
+    try{
+      if (!document.querySelector('.sand-overlay')){
+        const d = document.createElement('div');
+        d.className = 'sand-overlay';
+        d.setAttribute('aria-hidden','true');
+        // insert at top of body so it sits under other positioned content
+        try { document.body.insertBefore(d, document.body.firstChild); } catch(e){ document.body.appendChild(d); }
+      }
+      // Re-run shell handler attachment and positioning in case the script executed after DOM creation
+      try { attachShellHandlers(document); } catch(e){}
+      try { positionShellsBetween(); } catch(e){}
+    } catch(e){}
+  })();
