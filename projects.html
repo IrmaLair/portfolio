@@ -113,10 +113,21 @@
 
         categories.forEach(cat => { chipsBar.appendChild(renderChip(cat)); });
 
-        // activate category from URL or default to first
-        const initial = getCategoryFromURL() || 'Featured';
+        // activate category from URL or default to a sensible choice:
+        // - if URL provides category, use it
+        // - otherwise, use 'Featured' only if there are Featured projects
+        // - otherwise fall back to the first real category so the grid isn't blank
+        const urlCategory = getCategoryFromURL();
+        let initial = urlCategory || 'Featured';
+        const hasFeatured = PROJECTS.some(p => String(p.Featured||'').toLowerCase().trim() === 'yes');
+        if (!urlCategory) {
+          if (!hasFeatured) {
+            const firstReal = categories.find(c => c && c.trim().length);
+            initial = firstReal || 'Featured';
+          }
+        }
         const initialBtn = Array.from(chipsBar.children).find(b => b.textContent === initial) || chipsBar.firstElementChild;
-        if(initialBtn){ initialBtn.click(); }
+        if (initialBtn) { initialBtn.click(); }
 
       })();
     </script>
