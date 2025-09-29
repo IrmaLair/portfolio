@@ -10,6 +10,10 @@
 <body class="projects-page">
   <!-- Splash overlay (shows before JS hydrates) -->
   <div class="splash-overlay" id="splash-overlay">
+    <!-- This overlay is shown while JS hydrates. It is intentionally left empty; the static projects section is rendered in <main> below. -->
+  </div>
+
+  <main class="projects-main">
     <!-- PROJECTS_DATA and dynamic renderer replaced with generated static fragment -->
     <!-- Backup: the original PROJECTS_DATA and renderer were removed and replaced by a static fragment generated from projects/*.html -->
 
@@ -77,26 +81,6 @@
 </script>
 
     <!-- END GENERATED STATIC FRAGMENT -->
-      }
-
-      // create chips in preferred order, fallback include any others after
-      const known = new Set(PROJECTS_DATA.map(x=> (x.Category||'').trim()).filter(Boolean));
-      PREFERRED_CATEGORIES.forEach(cat=>{ chipsBar.appendChild(renderChip(cat)); if(known.has(cat)) known.delete(cat); });
-      // append remaining categories (if any) after preferred
-      Array.from(known).sort().forEach(cat=> chipsBar.appendChild(renderChip(cat)));
-
-      // make first chip active by default (Featured) or pick up from URL
-      const firstChip = chipsBar.querySelector('.chip');
-      const initial = getCategoryFromURL();
-      if(initial){
-        // find a chip matching the param and click it
-        const match = Array.from(chipsBar.querySelectorAll('.chip')).find(b=> b.textContent === initial);
-        if(match){ match.click(); }
-        else if(firstChip){ firstChip.click(); }
-      } else { if(firstChip){ firstChip.click(); } }
-
-      // Share UI removed — permalinks are still reflected in the URL when a chip is selected
-    </script>
   </main>
 
   <script src="scripts/main.js"></script>
